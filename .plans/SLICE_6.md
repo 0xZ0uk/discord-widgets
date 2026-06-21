@@ -1,141 +1,75 @@
-# Slice 6: Discord Webhook Delivery
+# Slice 6 — MCP Server & Preview App
+
+> **Status:** ✅ DONE  
+> **Package:** `apps/mcp-server`, `apps/preview`
+
+---
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-06-21 | Rewritten to reflect actual implementation. MCP server has 4 tools. Preview is React app. Both functional. |
+
+---
 
 ## Goal
 
-Widget images can be delivered to Discord channels via webhooks for **autonomous/scheduled pushes** — use cases where there's no triggering user message (e.g., a cron job posting daily weather). This is a secondary delivery mechanism. The primary flow (user asks → Hermes responds with `MEDIA:` attachment) doesn't need webhooks.
+Build an MCP server for programmatic widget access and a React web app for visual widget preview.
 
-## Issues
+## What Was Built
 
-### T1: Create Discord webhook delivery utility
+### MCP Server (`apps/mcp-server`)
+- Hono-based HTTP server
+- 4 tools exposed via MCP protocol:
 
-**What to build:**
-Create `packages/render/src/discord.ts` with functions to send embeds to Discord via webhooks:
+| Tool | Description | Input | Output |
+|------|-------------|-------|--------|
+| `list` | List all widgets | — | Widget names + metadata |
+| `get` | Get widget definition | `name: string` | Full YAML definition |
+| `search` | Search widgets | `query: string` | Matching widgets |
+| `render` | Render widget to PNG | `name: string, props: object` | File path to PNG |
 
-```typescript
-async function sendWidgetEmbed(webhookUrl: string, options: {
-  imageUrl: string;
-  title: string;
-  description?: string;
-  color?: string;
-  buttons?: { label: string; style: "primary" | "secondary" | "link"; url?: string; customId?: string }[];
-}): Promise<void>
+### Preview App (`apps/preview`)
+- React web app for visual widget preview
+- Renders widgets using the Takumi engine
+- Displays rendered PNG output
+- Uses hosted file URL for image display
+
+### Integration
+- MCP server queries `packages/catalog` for widget definitions
+- Render tool invokes `packages/render` engine
+- Preview app displays output from render pipeline
+
+## Acceptance Criteria
+
+- [x] MCP server starts and responds to requests
+- [x] `list` tool returns all 3 widgets
+- [x] `get` tool returns widget definition by name
+- [x] `search` tool finds widgets by keyword
+- [x] `render` tool produces PNG file and returns path
+- [x] Preview app renders widgets visually
+- [x] Preview app uses hosted URL for image display
+
+## Dependencies
+
+- `hono` (HTTP framework)
+- `packages/render` (rendering engine)
+- `packages/catalog` (widget definitions)
+
+## API Endpoints (MCP Server)
+
+```
+POST /mcp/tools/list       → { widgets: WidgetMeta[] }
+POST /mcp/tools/get        → { widget: WidgetDef }
+POST /mcp/tools/search     → { widgets: WidgetMeta[] }
+POST /mcp/tools/render     → { path: string, url: string }
 ```
 
-Use Discord's webhook API (POST JSON with `embeds` array). The embed should include:
-- Image (the rendered widget PNG URL)
-- Title (widget title)
-- Color (from widget catalog)
-- Buttons (from widget catalog, up to 5)
+## Known Limitations
 
-**Acceptance criteria:**
-- [x] `sendWidgetEmbed()` sends a valid Discord embed
-- [x] Embed displays the widget image correctly
-- [x] Buttons render in Discord (up to 5)
-- [x] Error handling for invalid webhook URLs
-- [x] Rate limit handling (Discord has 5/5s for webhooks)
-
-**Dependencies:** None — can start immediately (uses external API)
-
-**Metadata:**
-- **Source:** PRD Phase 3 (Discord webhook delivery)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T2: Create webhook configuration
-
-**What to build:**
-Add Discord webhook configuration to the env package:
-- `DISCORD_WIDGET_WEBHOOK_URL` — webhook URL for widget delivery
-- `DISCORD_BOT_TOKEN` — for button interactions (Slice 7)
-
-Document how to create a Discord webhook and configure the bot.
-
-**Acceptance criteria:**
-- [x] Env schema validates Discord credentials
-- [x] `.env.example` updated with Discord placeholders
-- [x] README documents webhook creation steps
-
-**Dependencies:** None
-
-**Metadata:**
-- **Source:** PRD Phase 3
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T3: Add Discord delivery to render pipeline
-
-**What to build:**
-Extend the `render` MCP tool (from Slice 4) with an optional `deliver` parameter. When `deliver: true`, the tool sends the rendered widget to Discord via webhook in addition to returning the URL.
-
-```typescript
-// Tool: render (extended)
-// Input: { name, data, deliver?: boolean, webhookUrl?: string }
-// Output: { url: string, delivered: boolean }
-```
-
-**Note:** This is for autonomous pushes only. In the primary conversation flow, Hermes renders the widget and includes the image via `MEDIA:` syntax — no webhook involved.
-
-**Acceptance criteria:**
-- [x] `render({ name: "weather", data: {...}, deliver: true })` sends embed to Discord
-- [x] Embed appears in the configured Discord channel
-- [x] `deliver: false` (default) only returns URL
-- [x] Fallback: if webhook fails, still return URL
-
-**Dependencies:** T1, T2, Slice 4 T1
-
-**Metadata:**
-- **Source:** PRD Phase 3
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-## Changelog / Status Report
-
-**Date:** 2026-06-21
-**Completed by:** MiMoCode
-
-### Summary
-
-Implemented Discord webhook delivery for rendered widget images. Created a `sendWidgetEmbed()` utility that posts rich embeds (image, title, color, buttons) to Discord channels via webhooks, with rate limit retry and validation. Added Discord webhook configuration to the env schema and extended the MCP `render` tool with an optional `deliver` parameter that triggers webhook delivery after rendering.
-
-**Note:** This is the secondary delivery mechanism. The primary flow (Hermes renders → `MEDIA:` attachment in conversation) does not use webhooks.
-
-### Tasks Completed
-
-| Task | Status | Notes |
-|------|--------|-------|
-| T1: Create Discord webhook delivery utility | ✅ Done | Created `discord.ts` with `sendWidgetEmbed()`, retry logic for 429s, URL validation, max 5 buttons |
-| T2: Create webhook configuration | ✅ Done | Added `DISCORD_WIDGET_WEBHOOK_URL` and `DISCORD_BOT_TOKEN` to env schema, updated `.env.example` and README |
-| T3: Add Discord delivery to render pipeline | ✅ Done | Extended MCP `render` tool with `deliver` and `webhookUrl` params, maps catalog buttons to Discord format, graceful fallback on failure |
-
-### Files Changed
-
-- `packages/render/src/discord.ts` (new) — `sendWidgetEmbed()` with retry, validation, button support
-- `packages/render/src/index.ts` (modified) — Exports `sendWidgetEmbed` and types
-- `packages/env/src/index.ts` (modified) — Added `DISCORD_WIDGET_WEBHOOK_URL` and `DISCORD_BOT_TOKEN` optional strings
-- `.env.example` (modified) — Added Discord placeholder values
-- `README.md` (modified) — Added Discord Setup documentation section
-- `apps/mcp-server/src/index.ts` (modified) — Extended render tool with `deliver` and `webhookUrl` parameters
-
-### Validation
-
-- `pnpm turbo check-types` — all 5 packages pass (full turbo cache hit)
-
-### Code Review Findings (Fixed)
-
-1. **🔴 Wrong Discord button component type:** `discord.ts` used `type: 3` (String Select Menu) instead of `type: 2` (Button). Buttons would not render in Discord. Fixed to `type: 2`.
-
-2. **🟡 429 body parse could throw:** `response.json()` on rate-limit responses had no `.catch()` fallback. If Discord returns non-JSON on 429, the retry logic itself would crash. Added `.catch(() => ({ retry_after: 1 }))`.
-
-3. **🟡 `imageUrl` not validated:** `sendWidgetEmbed` validated `webhookUrl` but not `imageUrl`. Added empty-string check to prevent broken embeds.
-
-### Next Steps
-
-1. Slice 7: Button interactions via Discord bot (requires `DISCORD_BOT_TOKEN` and interactions endpoint)
-2. End-to-end test with a real Discord webhook
-3. Consider rate limiting at the application level (not just retry on 429)
+- No authentication on MCP server
+- Preview app is basic — no interaction simulation
+- No hot-reload for widget catalog changes
+- Only 1 PNG rendered at a time
+- Preview doesn't support testing `[[embed]]` directives

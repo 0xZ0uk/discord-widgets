@@ -1,93 +1,110 @@
-# Slice 8: Widget Preview Polish
+# Slice 8 — Widget Preview Polish
+
+> **Status:** ⬜ NOT STARTED  
+> **Package:** `apps/preview`
+
+---
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-06-21 | **REWORKED.** Original scope was basic preview. New scope: full catalog browsing, live render preview, interaction simulation, embed directive testing. |
+
+---
 
 ## Goal
 
-Polish the widget preview app (`apps/preview/`) into a proper development tool. No template editor — just a better previewer for iterating on widget designs.
+Polish the `apps/preview` React app into a complete widget development and testing environment with catalog browsing, live rendering, and interaction simulation.
 
-## Issues
+## Scope
 
-### T1: Add widget category filtering to preview
+### Features
 
-**What to build:**
-Add a category filter to the preview app. Show all categories as pills/chips, clicking one filters the widget dropdown. Show widget count per category.
+1. **Catalog Browser**
+   - Sidebar listing all widgets from catalog
+   - Search/filter by name or description
+   - Click to preview widget with default props
 
-Use the catalog's `category` field from YAML definitions.
+2. **Live Render Preview**
+   - Edit props in a form panel
+   - Real-time re-render as props change
+   - Display rendered PNG at full size
+   - Show render metadata (dimensions, file size, render time)
 
-**Acceptance criteria:**
-- [ ] Category pills displayed above widget dropdown
-- [ ] Clicking a category filters the dropdown
-- [ ] "All" option shows every widget
-- [ ] Widget count shown per category
+3. **Interaction Simulation**
+   - Simulate Discord button clicks
+   - Test `custom_id` routing
+   - Preview state changes
+   - Mock interaction payloads
 
-**Dependencies:** Slice 2 (third widget needed for filtering to be useful)
+4. **Embed Directive Testing**
+   - Text editor for `[[embed]]` directives
+   - Parse and preview embed payload
+   - Show Discord embed mock-up
+   - Validate directive syntax
 
-**Metadata:**
-- **Source:** PRD Phase 4 (Polish)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
+5. **Export & Share**
+   - Copy rendered PNG URL
+   - Download PNG file
+   - Copy `[[embed]]` directive text
+   - Copy Discord API payload JSON
 
----
+### UI Layout
 
-### T2: Show widget metadata in preview
+```
+┌─────────────┬──────────────────────┬──────────────┐
+│  Catalog    │  Render Preview      │  Props       │
+│  Sidebar    │  (PNG display)       │  Editor      │
+│             │                      │              │
+│  weather    │  ┌──────────────┐    │  location:   │
+│  crypto     │  │              │    │    [NYC   ]  │
+│  rss-feed   │  │  Widget PNG  │    │  temp:       │
+│             │  │              │    │    [72    ]  │
+│  search...  │  └──────────────┘    │  condition:  │
+│             │                      │    [Sunny ]  │
+│             │  Metadata: 800×400   │              │
+│             │  Render: 234ms       │  [Render]    │
+└─────────────┴──────────────────────┴──────────────┘
+```
 
-**What to build:**
-Display widget metadata below the Discord buttons: name, description, category, available fields, and the YAML source. Help developers understand what data the widget expects.
+## Acceptance Criteria
 
-**Acceptance criteria:**
-- [ ] Widget name and description shown
-- [ ] Available fields listed with types
-- [ ] Buttons from catalog shown (label, style, action type)
-- [ ] Collapsible YAML source view
+- [ ] Catalog sidebar lists all 3 widgets
+- [ ] Search/filter works across widget names and descriptions
+- [ ] Selecting a widget loads its YAML definition + default props
+- [ ] Props editor allows editing all widget parameters
+- [ ] Re-render button produces updated PNG
+- [ ] Rendered PNG displays at full size
+- [ ] Metadata panel shows dimensions, file size, render time
+- [ ] Embed directive text editor with syntax highlighting
+- [ ] Directive parser validates and previews embed payload
+- [ ] Discord embed mock-up shows final appearance
+- [ ] Copy-to-clipboard for PNG URL, directive text, API payload
 
-**Dependencies:** None
+## Dependencies
 
-**Metadata:**
-- **Source:** PRD Phase 4
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
+- `apps/preview` (existing React app)
+- `packages/render` (rendering engine)
+- `packages/catalog` (widget definitions)
+- `packages/embed` (parser for directive testing)
 
----
+## Tech Stack
 
-### T3: Improve codegen with interactive prompts
+- React (existing)
+- Tailwind CSS (styling)
+- Monaco Editor or CodeMirror (text editing)
+- `packages/render` engine (client-side or server-side rendering)
 
-**What to build:**
-Update `scripts/generate-widget.ts` to be interactive:
-- Prompt for name (with kebab-case validation)
-- Prompt for category (suggest existing: weather, content, finance, social, utility)
-- Prompt for primary color (default: #5865f2)
-- Show summary before creating
+## Open Questions
 
-Use readline — no new dependencies. Add `--yes` flag to skip prompts for CI.
+1. Should rendering happen client-side (WASM Takumi) or server-side (MCP render tool)?
+2. Should we support multiple widget preview in a grid layout?
+3. Do we need undo/redo in the props editor?
+4. Should we persist preview state to localStorage?
 
-**Acceptance criteria:**
-- [ ] `pnpm generate` prompts for name, category, color
-- [ ] Invalid input re-prompts with clear error
-- [ ] Summary shown before file creation
-- [ ] `--yes` flag skips all prompts
+## Risks
 
-**Dependencies:** None
-
-**Metadata:**
-- **Source:** PRD Phase 4
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T4: Add widget render comparison view
-
-**What to build:**
-Show the same widget rendered at different sizes (800×400, 800×480, 1200×630) side-by-side. Helps developers verify their widget looks good at common Discord embed dimensions.
-
-**Acceptance criteria:**
-- [ ] Three render sizes shown side-by-side
-- [ ] Each size renders independently
-- [ ] Layout adjusts responsively
-- [ ] Click a size to set it as the primary preview
-
-**Dependencies:** None
-
-**Metadata:**
-- **Source:** PRD Phase 4
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
+- Client-side rendering may be slow for complex widgets
+- Monaco Editor bundle size impact on preview app
+- State synchronization between props editor and preview

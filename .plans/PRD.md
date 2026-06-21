@@ -1,116 +1,214 @@
-# PRD: Discord Widgets
+# Discord Widgets — Product Requirements Document (PRD)
 
-## Problem Statement
+> **Last updated:** 2026-06-21 · **Status:** In Progress (slices 1–6 done)
 
-Hermes (AI agent) currently responds to Discord messages with plain text. Many queries — weather, news, RSS feeds, crypto prices — would benefit from structured, visual responses. Discord embeds via bots are limited to static JSON. There's no system to dynamically generate rich widget images from React components and serve them as visual responses in daily conversations.
+## Summary
 
-The vision: **Hermes renders styled widget cards as PNG images and delivers them as attachments in conversations.** When you ask "what's the weather in Porto?" — you get a polished weather card, not a wall of text.
+Discord Widgets is a Hermes Agent subsystem that renders live, interactive data widgets (weather cards, crypto tickers, RSS feeds) as PNG images and delivers them to Discord channels through three delivery paths: **embed directives** (agent-authored `[[embed]]` blocks parsed by the Gateway adapter), **MEDIA: attachments** (file-based fallback), and **webhooks** (autonomous cron/external pushes). The rendering pipeline uses Takumi JSX→PNG, and the system integrates with Hermes Agent via an MCP server for tool-based catalog access and a preview web app for development-time visualization. The goal is to make rich Discord embeds a first-class output type for any Hermes agent run.
 
-## Solution
+---
 
-A monorepo system with four layers:
+## Architectural Layers
 
-1. **Rendering Engine** — React components rendered to PNG via Takumi (Rust, no browser). Components use Tailwind CSS via the `tw` prop.
-2. **Widget Catalog** — YAML-defined widget metadata (name, description, component, category, color, fields, buttons). Zod schemas for validation.
-3. **MCP Server** — Tools for Hermes to discover and render widgets: `list`, `search`, `get`, `render`.
-4. **Hermes Integration** — Skill that teaches Hermes when to use widgets and how to deliver them (image attachments via `MEDIA:` syntax).
+The system is organized into four layers:
 
-### Delivery Model
+| Layer | Packages | Purpose |
+|-------|----------|---------|
+| **Render** | `packages/render` | Takumi JSX→PNG engine, widget components (WeatherCard, CryptoPrices, RssFeedCard), registry, Discord delivery |
+| **Catalog** | `packages/catalog` | YAML widget definitions, Zod validation schemas, metadata |
+| **Embed** | `packages/embed` | `[[embed]]` directive parser (TS + Python), Discord API payload builder, Gateway integration hook |
+| **Apps** | `apps/mcp-server`, `apps/preview` | MCP server (list/get/search/render tools), React preview web app |
+| **Env** | `packages/env` | Zod-validated environment variables (`DISCORD_WIDGET_WEBHOOK_URL`, `DISCORD_BOT_TOKEN`) |
 
-**Primary (conversations):** Hermes renders a widget → gets a file path/URL → includes it as `MEDIA:/path/to/widget.png` in the response. No webhook needed. This is how widgets work in daily conversations.
+### Rendering Engine
 
-**Secondary (autonomous pushes):** For scheduled/cron tasks that post to channels without a triggering message, a Discord webhook sends the widget as an embed. This is optional and not part of the core flow.
+- **Engine:** `packages/render/src/engine.ts` — Takumi JSX→PNG (replaced Satori)
+- **Registry:** `packages/render/src/registry.ts` — name→component mapping
+- **Hosting:** `packages/render/src/hosted.ts` — local file write to `out/` (R2 removed)
+- **Discord:** `packages/render/src/discord.ts` — webhook delivery with retry + 429 handling
 
-## Current State (what exists)
+### Embed System
 
-### Completed
-- Takumi rendering engine (`packages/render/src/engine.ts`)
-- WeatherCard component (Tailwind, 800×400)
-- RssFeedCard component (Tailwind, 800×480, pagination dots, nav bar)
-- CryptoPrices component (Tailwind, 800×400)
-- Widget codegen script (`pnpm generate <name>`)
-- Widget catalog with YAML definitions (`packages/catalog/src/widgets/`)
-- Widget registry mapping names → components (`packages/render/src/registry.ts`)
-- Widget preview web app (`apps/preview/` — Hono + React + Vite + Tailwind)
-- Takumi skill (`.agents/skills/takumi/`)
-- Discord Widgets skill (`.agents/skills/discord-widgets/`) — v1.2.0 with MEDIA: delivery
-- Demo script rendering all widgets as PNG
-- Image upload to R2 (optional, falls back to local files)
-- MCP server with 4 tools: list, search, get, render
-- Discord webhook delivery (optional, for autonomous pushes)
+- **Parser (TS):** `packages/embed/src/parser.ts` — parses `[[embed]]` directives from agent responses
+- **Builder (TS):** `packages/embed/src/builder.ts` — builds Discord API embed payloads
+- **Parser (Python):** `packages/embed/python/embed_parser.py` — 1:1 Python port
+- **Adapter Patch:** `packages/embed/python/adapter_patch.py` — 3 manual patch snippets for Hermes Discord adapter
+- **Tests:** 19 unit tests + 6 integration tests (Python only)
 
-### Not Started
-- Button interaction handler (Previous/Next pagination via bot)
-- Preview app polish (category filtering, metadata display, render comparison)
-- Community template system
+---
 
-## User Stories
+## Delivery Model (3 Paths)
 
-1. As a Hermes user, I want to ask "what's the weather in Porto?" and receive a visual weather widget card instead of plain text, so that the information is more scannable and pleasant.
-2. As a Hermes user, I want to ask "show me the latest RSS articles" and receive a paginated widget with Previous/Next navigation, so that I can browse content without leaving Discord.
-3. As a Hermes user, I want widget responses to include interactive buttons (Read Article, Previous, Next), so that I can take actions directly from the embed.
-4. As a Hermes user, I want widgets to load fast (< 2s), so that the experience feels responsive.
-5. As a developer, I want to create new widgets with `pnpm generate <name>`, so that adding widgets is a 2-minute task.
-6. As a developer, I want to preview widgets in a web app with hot reload, so that I can iterate on designs quickly.
-7. As a developer, I want widget templates defined in YAML, so that non-developers can edit metadata without touching code.
-8. As a Hermes operator, I want the MCP server to let Hermes discover available widgets, so that it can choose the right widget for a query.
-9. As a Hermes operator, I want Hermes to match user queries to widgets automatically, so that widget responses happen without manual configuration.
-10. As a Hermes operator, I want rendered widget images delivered as attachments in conversations, so that Discord displays them natively without external hosting.
-11. As a Hermes operator, I want button clicks on widget embeds to trigger actions (navigate pages, open links), so that widgets are interactive.
-12. As a developer, I want widget components to use Tailwind CSS, so that styling is fast and consistent.
-13. As a Hermes user, I want widget images to include the source/article link, so that I can click through to full content.
-14. As a Hermes operator, I want the system to handle multiple widget types (weather, news, crypto, polls, etc.), so that Hermes can respond to diverse queries visually.
+Delivery paths are ordered by priority. The system tries Path 1 first, falls back to Path 2, and Path 3 is for autonomous/cron use.
 
-## Implementation Decisions
+### Path 1: EMBED DIRECTIVES (Primary)
 
-### Rendering
-- **Takumi over Satori** — Takumi supports Tailwind CSS, CSS Grid, backdrop-filter, emoji, and animations. Satori only supports inline styles. Decision made after evaluating both.
-- **`tw` prop for Tailwind** — Components use `<div tw="flex p-12 bg-gray-900">` instead of `style={{}}`. Takumi resolves Tailwind at render time.
-- **No browser required** — Takumi is a Rust binary (napi-rs for Node.js, WASM for edge). No Playwright/Puppeteer overhead.
+```
+Agent response → [[embed widget="weather" ...]] → Gateway adapter parses → Discord embed with image attachment + interactive buttons
+```
 
-### Widget Architecture
-- **Component + Catalog split** — React components in `packages/render/src/components/`, metadata in `packages/catalog/src/widgets/*.yaml`. Separation of visual logic from catalog data.
-- **Registry pattern** — `packages/render/src/registry.ts` maps widget names to components. MCP server uses this to dynamically load and render widgets.
-- **Codegen** — `pnpm generate <name>` creates component + catalog entry + updates exports. Prevents boilerplate mistakes.
+- Agent embeds `[[embed]]` directives in its response text
+- Gateway adapter intercepts, parses via `embed_parser.py`, renders widget via Takumi, attaches PNG, builds Discord embed payload
+- Buttons are pre-defined in the widget's YAML catalog entry
+- **Status:** ✅ Live-tested with REST API delivery
 
-### Preview App
-- **Server-side rendering** — Widget components are rendered as PNG on the server (via Takumi), not in the browser. The preview shows the actual rendered image.
-- **Mock Discord buttons** — Below the rendered image, HTML/CSS buttons mock how Discord would display the embed's interactive elements.
+### Path 2: MEDIA: ATTACHMENT (Fallback)
 
-### Image Hosting
-- **Local-first, R2 optional** — Widgets render to local files by default. When R2 is configured, they upload to CDN for persistent URLs. The local fallback means the system works without any cloud credentials.
+```
+Agent response contains MEDIA:/path/to/widget.png → Gateway extracts → discord.File() attachment
+```
 
-### MCP Server
-- **Hono + MCP SDK** — Lightweight API server exposing tools for widget discovery and rendering.
-- **Four tools**: `list` (browse catalog), `search` (fuzzy match), `get` (template lookup), `render` (generate PNG and return path/URL).
+- Agent renders widget to local file, references via `MEDIA:` syntax
+- Gateway adapter extracts file path and sends as Discord attachment
+- **Status:** ✅ Implemented in gateway adapter patches
 
-### Hermes Integration
-- **Skill-based matching** — A Hermes skill that teaches the agent when to use widgets and how to select the right one.
-- **MEDIA: delivery** — Widget images are delivered as attachments in Hermes responses using `MEDIA:/path/to/file.png`. No webhook needed for conversation responses.
-- **Webhook delivery (secondary)** — Optional webhook for autonomous/scheduled pushes to channels. Not part of the core flow.
-- **Button interactions** — Bot handles button clicks ( Previous/Next pagination, link opens). Requires Discord bot with message component interactions. Only relevant for webhook-sent embeds (conversation attachments don't support interactive buttons).
+### Path 3: WEBHOOK (Autonomous)
 
-## Testing Decisions
+```
+Cron/external trigger → sendWidgetEmbed() → Discord webhook URL → Discord channel
+```
 
-- **Widget rendering** — Each component should render without errors. Test via `pnpm -F @discord-widgets/render demo`.
-- **Catalog parsing** — YAML files should parse to valid Widget schemas. Test via `loadWidgets()` function.
-- **MCP tools** — Each tool should return expected structure. Test with mock data.
-- **Integration** — End-to-end: query → widget match → render → image attachment. Test manually in Discord.
-- **Visual regression** — Screenshot comparison for widget renders (future).
+- Standalone delivery path for scheduled/autonomous widget updates
+- Uses `packages/render/src/discord.ts` webhook delivery
+- **Status:** ✅ Implemented with retry + rate-limit safety
 
-## Out of Scope
+---
 
-- Full dashboard/admin UI (only a simple preview app)
-- Widget template editor (preview polish only, no editing)
-- Widget analytics (views, clicks)
-- Multi-language widget support
-- Widget versioning/rollbacks
-- Custom widget creation by end-users (developer-only for now)
-- Real-time streaming widgets (static images only)
+## Widget Catalog
 
-## Further Notes
+| Widget | Status | Description |
+|--------|--------|-------------|
+| `weather` | ✅ Done | Weather card with conditions, temperature, forecast |
+| `crypto-prices` | ✅ Done | Cryptocurrency price ticker (BTC, ETH, etc.) |
+| `rss-feed` | ✅ Done | RSS/Atom feed card with latest items |
+| `poll` | ⬜ Not started | Interactive poll with vote buttons |
+| `chart` | ⬜ Not started | Data visualization / chart widget |
+| `dashboard` | ⬜ Not started | Multi-metric dashboard composite |
 
-- The project follows the Agora Feed monorepo conventions (Turborepo, Biome, pnpm, workspace refs).
-- Widget components must follow Takumi constraints: explicit `display: flex` on multi-child containers, `tw` prop for Tailwind, no system fonts.
-- The preview app (`apps/preview/`) is the primary development tool for widget design.
-- Discord embed buttons are limited to 5 per message. Widget nav should stay within this limit.
+### Widget Definition Format
+
+Each widget is defined in `packages/catalog` as a YAML file with Zod schema validation:
+
+```yaml
+name: weather
+version: "1.0"
+description: "Weather conditions card"
+render:
+  component: WeatherCard
+  width: 800
+  height: 400
+buttons:
+  - id: refresh
+    label: "Refresh"
+    style: secondary
+  - id: details
+    label: "Details"
+    style: link
+```
+
+---
+
+## Remaining Work
+
+### Slice 7 — Embed Interaction Handler (⬜ Not Started)
+
+**Reworked scope:** Handle Discord button interactions (custom_id → Hermes callback → agent re-renders widget with updated state). Originally planned as pagination/state management; now focuses on the interaction pipeline from Discord button click back to widget re-render.
+
+- Listen for `INTERACTION_CREATE` events on the Gateway
+- Route `custom_id` to appropriate handler (refresh, paginate, toggle)
+- Trigger Hermes agent callback to re-render widget with updated params
+- Update Discord message with new embed + attachment
+- **State management:** In-memory state store keyed by interaction token
+
+### Slice 8 — Widget Preview Polish (⬜ Not Started)
+
+**Reworked scope:** Polish `apps/preview` React app with full catalog browsing, live render preview, and interaction simulation.
+
+### Slice 9 — Gateway Plugin (⬜ Not Started, NEW)
+
+**New slice:** Build a Hermes Gateway plugin that auto-applies the Discord adapter patches instead of requiring manual copy-paste from `adapter_patch.py`.
+
+- Package the adapter patches as a proper Hermes plugin
+- Auto-register on Gateway startup
+- Support config for webhook URL, channel mapping, widget defaults
+- Hot-reload support for widget catalog changes
+
+### Slice 10 — Additional Widget Types (⬜ Not Started, NEW)
+
+- `poll` widget: Interactive poll with vote buttons, tally display
+- `chart` widget: Bar/line/pie charts from data arrays
+- `dashboard` widget: Composite multi-metric layout
+- Each new widget requires: component in `render`, YAML in `catalog`, MCP tool support
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DISCORD_WIDGET_WEBHOOK_URL` | Yes | Discord webhook URL for autonomous delivery |
+| `DISCORD_BOT_TOKEN` | Yes | Bot token for Gateway interactions |
+
+---
+
+## MCP Server Tools
+
+The `apps/mcp-server` (Hono) exposes 4 tools:
+
+| Tool | Description |
+|------|-------------|
+| `list` | List all available widgets in catalog |
+| `get` | Get widget definition by name |
+| `search` | Search widgets by keyword |
+| `render` | Render a widget to PNG (returns file path) |
+
+---
+
+## Key Decisions
+
+1. **R2 removed** — Local file hosting in `out/` directory. No cloud CDN dependency.
+2. **Satori → Takumi** — Rendering engine swap for better JSX support.
+3. **Embed directives are primary** — Not webhooks, not attachments. The `[[embed]]` pattern is the canonical delivery path.
+4. **Python tests are authoritative** — TypeScript has no automated tests yet. Python test suite (19 unit + 6 integration) is the source of truth for the embed parser.
+5. **Adapter patches are manual** — Until Slice 9, gateway integration requires manual copy-paste from `adapter_patch.py`.
+
+---
+
+## File Tree (Current)
+
+```
+discord-widgets/
+├── packages/
+│   ├── render/
+│   │   └── src/
+│   │       ├── engine.ts          # Takumi rendering engine
+│   │       ├── registry.ts        # name → component map
+│   │       ├── hosted.ts          # local file write to out/
+│   │       ├── discord.ts         # webhook delivery
+│   │       ├── WeatherCard.tsx
+│   │       ├── CryptoPrices.tsx
+│   │       └── RssFeedCard.tsx
+│   ├── catalog/                   # YAML definitions + Zod schemas
+│   ├── embed/
+│   │   ├── src/
+│   │   │   ├── parser.ts          # TS embed directive parser
+│   │   │   ├── builder.ts         # Discord API payload builder
+│   │   │   └── hook.ts            # Gateway integration ref
+│   │   └── python/
+│   │       ├── embed_parser.py    # Python port (1:1)
+│   │       ├── adapter_patch.py   # 3 patch snippets
+│   │       ├── test_embed_parser.py  # 19 unit tests
+│   │       └── test_integration.py   # 6 e2e tests
+│   ├── env/                       # Zod env schema
+│   ├── ui/                        # empty placeholder
+│   └── config/                    # tsconfig.base.json only
+├── apps/
+│   ├── mcp-server/                # Hono MCP server (4 tools)
+│   └── preview/                   # React preview web app
+├── scripts/
+│   └── generate-widget.ts         # codegen
+├── out/                           # rendered PNGs (gitignored)
+└── .agents/skills/
+    ├── discord-widgets/SKILL.md   # 285-line skill doc
+    └── takumi/SKILL.md            # Takumi rendering skill
+```

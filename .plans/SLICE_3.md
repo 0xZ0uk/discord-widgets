@@ -1,150 +1,75 @@
-# Slice 3: MCP Server — Catalog Tools
+# Slice 3 — Embed Directive System
+
+> **Status:** ✅ DONE  
+> **Package:** `packages/embed`
+
+---
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-06-21 | Rewritten to reflect actual implementation. Python tests are authoritative. TS parser + builder exist. No gateway plugin yet. |
+
+---
 
 ## Goal
 
-The MCP server exposes tools that let Hermes discover available widgets. This is the foundation for Hermes to autonomously choose and render widgets.
+Parse `[[embed]]` directives from agent responses and build Discord API payloads for delivery.
 
-## Issues
+## What Was Built
 
-### T1: Set up MCP server with Hono + MCP SDK
+### TypeScript Parser (`packages/embed/src/parser.ts`)
+- Parses `[[embed widget="weather" ...]]` directives from agent text output
+- Extracts widget name and parameters
+- Returns structured embed directive objects
 
-**What to build:**
-Initialize `apps/mcp-server/` with a working Hono server and MCP SDK integration. The server should:
-- Start on a configurable port
-- Register MCP tools via the SDK
-- Serve health check endpoint
-- Use stdio transport (for Hermes integration)
+### TypeScript Builder (`packages/embed/src/builder.ts`)
+- Constructs Discord API embed payloads from parsed directives
+- Handles embed fields, colors, images, buttons
+- Produces `createMessage` payload with embed + attachment
 
-**Acceptance criteria:**
-- [x] Server starts without errors
-- [x] MCP tools are registered and discoverable
-- [x] Health check returns 200
-- [x] Server can be started via `pnpm dev:mcp`
+### Gateway Hook Reference (`packages/embed/src/hook.ts`)
+- Reference implementation for Gateway integration
+- NOT a working plugin — manual copy-paste required (until Slice 9)
 
-**Dependencies:** None — can start immediately
+### Python Parser (`packages/embed/python/embed_parser.py`)
+- 1:1 port of the TypeScript parser
+- Used in Hermes Discord adapter (manual patches)
 
-**Metadata:**
-- **Source:** PRD Phase 2 (MCP Server)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
+### Adapter Patch (`packages/embed/python/adapter_patch.py`)
+- 3 patch snippets for manual integration with Hermes Discord adapter
+- Patches: embed parsing, media extraction, button handling
+- Applied by hand — no auto-apply mechanism
 
----
+### Tests
+- `test_embed_parser.py`: 19 unit tests (parser edge cases, malformed input, valid directives)
+- `test_integration.py`: 6 end-to-end tests (full pipeline: parse → build → Discord API)
 
-### T2: Implement `list` tool
+## Acceptance Criteria
 
-**What to build:**
-Create an MCP tool `list` that returns all available widgets from the catalog. Accepts optional `category` filter. Returns widget metadata (name, description, category, color, fields, buttons).
+- [x] `[[embed]]` directives parsed correctly (TS + Python)
+- [x] Discord API payloads built from parsed directives
+- [x] Python parser passes 19 unit tests
+- [x] Integration tests pass 6 e2e scenarios
+- [x] Live-tested: directives render embeds with images + buttons via REST API
 
-```typescript
-// Tool: list
-// Input: { category?: string }
-// Output: WidgetMeta[]
-```
+## Dependencies
 
-Use the `loadWidgets()` function from `packages/catalog/`.
+- `zod` (schema validation)
+- `discord-api-types` (Discord API type definitions)
 
-**Acceptance criteria:**
-- [x] `list` tool returns all widgets when no filter
-- [x] `list` with `category` filter returns matching widgets
-- [x] Output includes name, description, category, color, fields, buttons
-- [x] Empty catalog returns empty array (not error)
+## Known Limitations
 
-**Dependencies:** T1
+- Adapter patches are manual copy-paste (no gateway plugin)
+- TypeScript has NO automated tests
+- Parser does not handle nested directives
+- No error recovery for malformed `[[embed]]` blocks
 
-**Metadata:**
-- **Source:** PRD Phase 2 (list tool)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
+## Test Coverage
 
----
-
-### T3: Implement `search` tool
-
-**What to build:**
-Create an MCP tool `search` that fuzzy-matches widgets by query string. Search across name, description, and category fields. Return ranked results with score.
-
-```typescript
-// Tool: search
-// Input: { query: string, limit?: number }
-// Output: { name, description, score }[]
-```
-
-Use simple fuzzy matching (Levenshtein or includes + scoring). No external dependency needed for v1.
-
-**Acceptance criteria:**
-- [x] `search("weather")` returns WeatherCard
-- [x] `search("rss")` returns RssFeedCard
-- [x] `search("crypto")` returns CryptoPrices
-- [x] `search("xyz")` returns empty array
-- [x] Results are ranked by relevance score
-- [x] `limit` parameter works
-
-**Dependencies:** T1
-
-**Metadata:**
-- **Source:** PRD Phase 2 (search tool)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T4: Implement `get` tool
-
-**What to build:**
-Create an MCP tool `get` that returns the full template definition for a specific widget by name. Includes the component code reference, catalog metadata, and available data fields.
-
-```typescript
-// Tool: get
-// Input: { name: string }
-// Output: WidgetFull | null
-```
-
-**Acceptance criteria:**
-- [x] `get("weather")` returns full WeatherCard template
-- [x] `get("nonexistent")` returns null (not error)
-- [x] Output includes component reference, fields, buttons, example data
-
-**Dependencies:** T1
-
-**Metadata:**
-- **Source:** PRD Phase 2 (get tool)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-## Changelog / Status Report
-
-**Date:** 2026-06-21
-**Completed by:** MiMoCode Agent
-
-### Summary
-Implemented the MCP server with Hono and MCP SDK integration, providing three catalog tools (`list`, `search`, `get`) that enable Hermes to discover and retrieve widget definitions. The server uses stdio transport for Hermes integration and includes a health check endpoint.
-
-### Tasks Completed
-
-| Task | Status | Notes |
-|------|--------|-------|
-| T1: Set up MCP server with Hono + MCP SDK | ✅ Done | Server starts on configurable port, registers MCP tools, health check returns 200, starts via `pnpm dev:mcp` |
-| T2: Implement `list` tool | ✅ Done | Returns all widgets with optional category filter, includes required metadata fields |
-| T3: Implement `search` tool | ✅ Done | Fuzzy matching with scoring across name, description, category fields, supports limit parameter |
-| T4: Implement `get` tool | ✅ Done | Returns full widget template by name, null for nonexistent widgets |
-
-### Files Changed
-- `apps/mcp-server/package.json` (modified - added @modelcontextprotocol/sdk dependency)
-- `apps/mcp-server/src/index.ts` (modified - implemented MCP server with all tools)
-
-### Validation
-- `pnpm check-types` passes for entire monorepo
-- `pnpm dev:mcp` starts server successfully
-- Health check endpoint returns 200
-- All acceptance criteria verified
-
-### Next Steps
-1. Integrate MCP server with Hermes for widget discovery
-
-### Code Review Findings (Fixed)
-
-1. **🔴 `notifications/initialized` returned error:** MCP protocol sends this notification after handshake, but the server had no handler and returned `-32601 Method not found`. Fixed by adding `server.setNotificationHandler(NotificationsInitializedSchema, async () => {})` to silently acknowledge it.
-
-2. **🟡 Raw OpenSSL error on render failure:** The render tool's catch block passed through raw Node.js SSL errors (e.g. `EPROTO ssl3_read_bytes`). Fixed by adding friendly error messages that detect "not found in registry" and "R2 not configured" patterns and return actionable text.
+| Suite | Tests | Status |
+|-------|-------|--------|
+| Unit (Python) | 19 | ✅ All passing |
+| Integration (Python) | 6 | ✅ All passing |
+| Unit (TypeScript) | 0 | ⬜ None |

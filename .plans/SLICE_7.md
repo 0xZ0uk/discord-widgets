@@ -1,118 +1,90 @@
-# Slice 7: Button Interaction Handler
+# Slice 7 — Embed Interaction Handler
+
+> **Status:** ⬜ NOT STARTED  
+> **Package:** TBD (likely `packages/embed`)
+
+---
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-06-21 | **REWORKED.** Original scope was pagination/state management. New scope: button custom_id → Hermes callback → agent re-renders widget. Depends on Slice 9 (gateway plugin) for auto-registration. |
+
+---
 
 ## Goal
 
-Discord embed buttons (Previous/Next/Link) are interactive when widgets are delivered via **webhooks** (the secondary delivery flow). Clicking them triggers actions like pagination or opening URLs. This is only relevant for webhook-sent embeds — conversation attachments (`MEDIA:`) don't support interactive buttons.
+Handle Discord button interactions so users can click widget buttons (Refresh, Details, pagination) and trigger Hermes agent callbacks that re-render the widget with updated state.
 
-For the primary conversation flow, Hermes handles pagination manually: it renders the next/previous item and sends a new `MEDIA:` attachment when the user asks.
+## Scope
 
-## Issues
+### Interaction Pipeline
 
-### T1: Set up Discord bot with message components
+```
+User clicks button → Discord sends INTERACTION_CREATE
+→ Gateway plugin receives event
+→ Route custom_id to handler
+→ Trigger Hermes agent callback with interaction context
+→ Agent re-renders widget with updated params
+→ Update Discord message with new embed + attachment
+```
 
-**What to build:**
-Create a Discord bot (or extend existing) that listens for message component interactions (button clicks). Use Discord.js or raw Discord API.
+### Responsibilities
 
-The bot should:
-- Connect to Discord gateway
-- Listen for `INTERACTION_CREATE` events with type `MESSAGE_COMPONENT`
-- Acknowledge interactions and respond appropriately
+1. **Event Listener** — Listen for `INTERACTION_CREATE` events on the Discord Gateway
+2. **custom_id Router** — Parse `custom_id` format: `{widget}:{action}:{params}` (e.g., `weather:refresh: NYC`)
+3. **Handler Registry** — Map actions to handler functions (refresh, paginate, toggle, navigate)
+4. **Agent Callback** — Send interaction context to Hermes agent for re-render decision
+5. **Message Update** — Edit original Discord message with new embed + image attachment
+6. **State Store** — In-memory state keyed by interaction token (message_id + user_id)
 
-**Acceptance criteria:**
-- [ ] Bot connects to Discord and stays online
-- [ ] Bot receives button click events
-- [ ] Bot acknowledges interactions within 3s (Discord requirement)
+### Button Interaction Format
 
-**Dependencies:** Slice 6 T2 (bot token configured)
-
-**Metadata:**
-- **Source:** PRD Phase 3 (Button interaction handler)
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T2: Implement pagination handler
-
-**What to build:**
-When a user clicks "Next" or "Previous" on a widget embed, the bot:
-1. Reads the current widget state from the embed (current index, total items)
-2. Renders the next/previous widget item
-3. Edits the original embed with the new image and updated buttons
-
-The embed should carry metadata (hidden or in footer) to track pagination state:
-- `currentIndex` — which item is displayed
-- `totalItems` — total items in the set
-- `items` — the data array (or reference to it)
-
-For RSS feeds: the bot stores the feed items in memory (or a simple KV store) and paginates through them.
-
-**Note:** In the primary conversation flow, pagination works differently — the user asks "show next" and Hermes renders the next item as a new `MEDIA:` attachment.
-
-**Acceptance criteria:**
-- [ ] "Next" button shows the next item
-- [ ] "Previous" button shows the previous item
-- [ ] Buttons are disabled (grayed out) at start/end
-- [ ] Page counter updates (e.g., "2 / 5")
-- [ ] Response time < 3s for pagination
-
-**Dependencies:** T1, Slice 1 (image upload), Slice 4 (render tool)
-
-**Metadata:**
-- **Source:** PRD Phase 3 (Button interaction handler)
-- **Skill:** takumi
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T3: Implement link button handler
-
-**What to build:**
-"Read Article" / "🔗 Link" buttons open the associated URL. This is simpler than pagination — the button has a `url` property that Discord handles natively.
-
-Ensure the widget catalog's button definitions include `url` for link-type buttons.
-
-**Acceptance criteria:**
-- [ ] Link buttons open the correct URL in browser
-- [ ] No bot interaction needed (Discord handles URL buttons natively)
-
-**Dependencies:** None (Discord handles URL buttons natively)
-
-**Metadata:**
-- **Source:** PRD Phase 3
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
-
----
-
-### T4: Add pagination state storage
-
-**What to build:**
-Implement a simple in-memory (or file-based) store for widget pagination state. When a widget is rendered with multiple items (like RSS feed), store the items and current index so the bot can paginate.
-
-Key structure:
-```typescript
-interface WidgetState {
-  messageId: string;
-  widgetName: string;
-  items: any[];
-  currentIndex: number;
-  totalItems: number;
+```json
+{
+  "custom_id": "weather:refresh:NYC",
+  "component_type": 2,
+  "message_id": "...",
+  "user": { "id": "..." }
 }
 ```
 
-For v1, use a Map in memory. For persistence, could upgrade to SQLite later.
+### State Management
 
-**Acceptance criteria:**
-- [ ] State is stored when widget is first rendered
-- [ ] State is retrieved on button click
-- [ ] State is updated when pagination happens
-- [ ] State is cleaned up after interaction timeout (15min)
+- **In-memory store** keyed by `{message_id}:{user_id}`
+- State includes: widget name, last render params, interaction history
+- TTL: 15 minutes (Discord interaction token expiry)
+- No persistence (state lost on restart — acceptable for widget use case)
 
-**Dependencies:** T1
+## Acceptance Criteria
 
-**Metadata:**
-- **Source:** PRD Phase 3
-- **Workspace:** dir:/root/discord-widgets
-- **Assignee:** z0uk
+- [ ] Gateway receives `INTERACTION_CREATE` events
+- [ ] `custom_id` parsed into widget + action + params
+- [ ] Handler dispatches to correct function
+- [ ] Hermes agent callback triggered with context
+- [ ] Widget re-rendered with updated state
+- [ ] Discord message updated with new embed
+- [ ] State store manages interaction lifecycle
+- [ ] 15-minute TTL cleanup
+
+## Dependencies
+
+- Slice 3 (Embed Directive System) — parser for `[[embed]]` format
+- Slice 9 (Gateway Plugin) — auto-registration of interaction handler
+- `DISCORD_BOT_TOKEN` env var — required for Gateway connection
+- Discord Gateway `INTERACTIONS` intent
+
+## Open Questions
+
+1. Should state be persisted to survive restarts? (Current plan: no)
+2. How to handle concurrent clicks on same widget?
+3. What's the re-render timeout? (Proposed: 10 seconds)
+4. Should we support component-style interactions (select menus, modals)?
+
+## Risks
+
+- Discord Gateway connection stability
+- Interaction token expiry (15 min) limits long-running workflows
+- Concurrent interaction handling complexity
+- Agent callback latency may cause poor UX
