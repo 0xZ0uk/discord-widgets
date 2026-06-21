@@ -93,6 +93,12 @@ Implemented the MCP `render` tool — the final core capability for the MCP serv
 
 ### Next Steps
 
-1. Test `render` tool end-to-end with a live MCP client (Hermes integration)
-2. Add error handling for R2 upload failures (retry logic, timeout)
-3. Consider adding a `DELETE` tool to clean up old renders from R2
+### Code Review Findings (Fixed)
+
+1. **🔴 R2 env vars were required, crashing demo:** The env schema used `z.string().min(1)` for all R2 vars, meaning the server crashed at import time without a .env file. Fixed by making all R2 vars `z.string().optional()` in `packages/env/src/index.ts`.
+
+2. **🟡 S3Client created at module level:** `new S3Client({...})` ran at import time even without credentials. Fixed by lazy-initializing via `getS3()` function that only creates the client on first use.
+
+3. **🟡 Key collision risk in hosted.ts:** `widget-${Date.now()}.png` could collide on concurrent renders. Fixed by adding random suffix: `widget-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`.
+
+4. **🟡 hosted.ts now falls back to local files:** When R2 isn't configured, `renderToHostedUrl` saves to `out/` directory instead of crashing. Enables preview app to work without cloud credentials.

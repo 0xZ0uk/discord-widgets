@@ -73,6 +73,14 @@ Use the existing env schema pattern from the project.
 - [x] `.env.example` updated with R2 placeholders
 - [x] Missing vars produce clear error messages
 
+### Code Review Findings
+
+1. **🔴 R2 env vars should be optional (Critical):** Currently `z.string().min(1)` makes all R2 vars required, which crashes the demo when R2 isn't configured. Change to `z.string().optional()` so local-only mode works without R2. The `hosted.ts` module should check for credentials before using them.
+
+2. **🟡 S3Client created at module level:** `new S3Client({...})` runs at import time even if env vars are missing. Move to lazy initialization pattern (create on first use) so the module can be imported safely without credentials.
+
+3. **🟡 Key collision risk in hosted.ts:** `widget-${Date.now()}.png` can collide if two renders happen in the same millisecond. Add a random suffix: `widget-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`
+
 **Dependencies:** None — can start immediately
 
 **Metadata:**

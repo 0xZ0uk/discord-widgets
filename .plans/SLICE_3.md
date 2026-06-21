@@ -142,6 +142,9 @@ Implemented the MCP server with Hono and MCP SDK integration, providing three ca
 
 ### Next Steps
 1. Integrate MCP server with Hermes for widget discovery
-2. Implement render tool (T5 in future slice)
-3. Add authentication/authorization if needed
-4. Test with Hermes client
+
+### Code Review Findings (Fixed)
+
+1. **🔴 `notifications/initialized` returned error:** MCP protocol sends this notification after handshake, but the server had no handler and returned `-32601 Method not found`. Fixed by adding `server.setNotificationHandler(NotificationsInitializedSchema, async () => {})` to silently acknowledge it.
+
+2. **🟡 Raw OpenSSL error on render failure:** The render tool's catch block passed through raw Node.js SSL errors (e.g. `EPROTO ssl3_read_bytes`). Fixed by adding friendly error messages that detect "not found in registry" and "R2 not configured" patterns and return actionable text.

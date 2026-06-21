@@ -66,6 +66,10 @@ Update `packages/render/src/demo.tsx` to render a sample CryptoPrices widget (e.
 
 **Dependencies:** T1, T2
 
+### Code Review Findings
+
+1. **🟢 `replace` only matches first occurrence:** In `apps/preview/src/App.tsx`, the widget name formatter uses `.replace("-", " ")` which only replaces the first hyphen. Use `.replaceAll("-", " ")` for names like `crypto-prices` (becomes "crypto prices" not "crypto prices"). Minor cosmetic bug, add to SLICE_8 polish if desired.
+
 **Metadata:**
 - **Source:** PRD Phase 1 (3+ widgets)
 - **Skill:** takumi

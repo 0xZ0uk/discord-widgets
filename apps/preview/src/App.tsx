@@ -148,7 +148,7 @@ export function App() {
 								/>
 							)}
 							<h2 className="font-semibold text-lg capitalize">
-								{currentWidget.name.replace("-", " ")}
+								{currentWidget.name.replaceAll("-", " ")}
 							</h2>
 							{currentWidget.category && (
 								<span className="rounded-full bg-[#5865f2]/20 px-2 py-0.5 text-[#949cf7] text-xs">

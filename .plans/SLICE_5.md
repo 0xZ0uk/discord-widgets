@@ -91,6 +91,9 @@ Created the Hermes widget matching skill at `.agents/skills/discord-widgets/SKIL
 - `pnpm check-types` passes (5/5 packages, all cached)
 
 ### Next Steps
-1. Test the skill end-to-end with Hermes agent queries
-2. Verify MCP tool integration works in practice
-3. Consider adding more widget types as they become available
+
+### Code Review Findings (Fixed)
+
+1. **🔴 Skill used wrong widget names:** SKILL.md examples used PascalCase names (`WeatherCard`, `RssFeedCard`, `CryptoPrices`) but the catalog registers widgets as kebab-case (`weather`, `rss-feed`, `crypto-prices`). Confirmed live: `get("WeatherCard")` returns `null`, `get("weather")` works. Fixed all examples and reference tables in SKILL.md.
+
+2. **🟢 `replace` only matched first hyphen:** In `apps/preview/src/App.tsx`, the widget name formatter used `.replace("-", " ")` which only replaces the first hyphen (e.g. "crypto-prices" → "crypto prices"). Fixed to `.replaceAll("-", " ")`.

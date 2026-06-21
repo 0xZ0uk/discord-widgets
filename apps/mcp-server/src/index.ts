@@ -7,6 +7,7 @@ import {
 	CallToolRequestSchema,
 	ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { InitializedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { Hono } from "hono";
 
 const PORT = Number.parseInt(process.env.PORT ?? "3000", 10);
@@ -279,13 +280,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 				],
 			};
 		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			const friendly = msg.includes("not found in registry")
+				? `Widget "${widgetName}" not found. Use the "list" tool to see available widgets.`
+				: msg.includes("R2 not configured")
+					? "Image hosting not configured. Set R2 environment variables or check packages/render/src/hosted.ts for local fallback."
+					: msg;
 			return {
 				content: [
 					{
 						type: "text",
-						text: JSON.stringify({
-							error: err instanceof Error ? err.message : String(err),
-						}),
+						text: JSON.stringify({ error: friendly }),
 					},
 				],
 			};
@@ -296,6 +301,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+	// Silently acknowledge notifications/initialized (MCP protocol requirement)
+	server.setNotificationHandler(InitializedNotificationSchema, async () => {});
+
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 

@@ -1,7 +1,7 @@
 ---
 name: discord-widgets
 description: "Detect when a query benefits from a widget response and use MCP tools to render visual cards instead of plain text."
-version: 1.0.0
+version: 1.1.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -18,12 +18,12 @@ Use a widget response when the query would benefit from structured visual data. 
 
 ### Widget Triggers
 
-| Query Pattern | Widget | Example |
-|---------------|--------|---------|
-| Weather requests | WeatherCard | "What's the weather in Porto?" |
-| News / articles / RSS feeds | RssFeedCard | "Show me the latest tech news" |
-| Crypto prices / market data | CryptoPrices | "What's Bitcoin's price?" |
-| Stock prices | CryptoPrices (reused) | "How's Apple doing?" |
+| Query Pattern | Widget Name | Example |
+|---------------|-------------|---------|
+| Weather requests | `weather` | "What's the weather in Porto?" |
+| News / articles / RSS feeds | `rss-feed` | "Show me the latest tech news" |
+| Crypto prices / market data | `crypto-prices` | "What's Bitcoin's price?" |
+| Stock prices | `crypto-prices` (reused) | "How's Apple doing?" |
 | Structured visual data | Any matching widget | "Compare these metrics" |
 
 ### Plain Text Responses
@@ -50,13 +50,15 @@ search(query: "crypto")
 
 ### Step 2: Get widget details
 
-Use the MCP `get` tool to understand required fields:
+Use the MCP `get` tool with the **exact catalog name** (kebab-case) returned by search:
 
 ```
-get(name: "WeatherCard")
-get(name: "RssFeedCard")
-get(name: "CryptoPrices")
+get(name: "weather")
+get(name: "rss-feed")
+get(name: "crypto-prices")
 ```
+
+> ⚠️ Widget names are kebab-case (e.g. `crypto-prices`), NOT PascalCase (`CryptoPrices`).
 
 ### Step 3: Fetch the data
 
@@ -70,7 +72,7 @@ Fetch real data for the widget using web search, APIs, or available data sources
 Use the MCP `render` tool with the fetched data:
 
 ```
-render(name: "WeatherCard", data: { location: "Porto", temp: "22°", condition: "Partly Cloudy", icon: "⛅", color: "#3498db" })
+render(name: "weather", data: { location: "Porto", temp: "22°", condition: "Partly Cloudy", icon: "⛅", color: "#3498db" })
 ```
 
 ### Step 5: Respond with the image
@@ -85,9 +87,9 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 
 ## Widget Reference
 
-### WeatherCard
+### weather
 
-**Component:** `WeatherCard`
+**Component:** `weather`
 **Size:** 800×400
 **Required fields:**
 - `location` (string) — City/region name
@@ -98,9 +100,9 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 - `icon` (string) — Weather emoji (default: 🌤️)
 - `color` (string) — Accent color hex (default: #3498db)
 
-### RssFeedCard
+### rss-feed
 
-**Component:** `RssFeedCard`
+**Component:** `rss-feed`
 **Size:** 800×480
 **Required fields:**
 - `item` (object) — Feed item with:
@@ -116,9 +118,9 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 - `item.thumbnail` (string) — Thumbnail image URL
 - `color` (string) — Accent color hex (default: #5865f2)
 
-### CryptoPrices
+### crypto-prices
 
-**Component:** `CryptoPrices`
+**Component:** `crypto-prices`
 **Size:** 800×400
 **Required fields:**
 - `coin` (string) — Coin name
@@ -139,12 +141,12 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 **Tool calls:**
 ```
 1. search(query: "weather")
-   → [{ name: "WeatherCard", description: "Weather condition card", score: 100 }]
+   → [{ name: "weather", description: "Weather widget showing current conditions for a location", score: 100 }]
 
-2. get(name: "WeatherCard")
-   → { name: "WeatherCard", fields: ["location", "temp", "condition", "icon", "color"] }
+2. get(name: "weather")
+   → { name: "weather", fields: ["location", "temp", "condition", "icon", "color"] }
 
-3. render(name: "WeatherCard", data: {
+3. render(name: "weather", data: {
      location: "Porto, Portugal",
      temp: "22°",
      condition: "Partly Cloudy",
@@ -165,12 +167,12 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 **Tool calls:**
 ```
 1. search(query: "news")
-   → [{ name: "RssFeedCard", description: "RSS feed article card", score: 100 }]
+   → [{ name: "rss-feed", description: "RSS feed widget displaying article cards with navigation", score: 100 }]
 
-2. get(name: "RssFeedCard")
-   → { name: "RssFeedCard", fields: ["item", "currentIndex", "totalItems"] }
+2. get(name: "rss-feed")
+   → { name: "rss-feed", fields: ["item", "currentIndex", "totalItems"] }
 
-3. render(name: "RssFeedCard", data: {
+3. render(name: "rss-feed", data: {
      item: {
        title: "Takumi: Rust-Powered JSX-to-Image Renderer",
        summary: "Takumi is a Rust-based rendering engine...",
@@ -196,12 +198,12 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 **Tool calls:**
 ```
 1. search(query: "crypto")
-   → [{ name: "CryptoPrices", description: "Cryptocurrency price card", score: 100 }]
+   → [{ name: "crypto-prices", description: "Cryptocurrency price tracker showing real-time market data", score: 80 }]
 
-2. get(name: "CryptoPrices")
-   → { name: "CryptoPrices", fields: ["coin", "symbol", "price", "change24h"] }
+2. get(name: "crypto-prices")
+   → { name: "crypto-prices", fields: ["coin", "symbol", "price", "change24h"] }
 
-3. render(name: "CryptoPrices", data: {
+3. render(name: "crypto-prices", data: {
      coin: "Bitcoin",
      symbol: "BTC",
      price: "$67,500",
@@ -237,13 +239,13 @@ Return the hosted image URL in your response. Do not include plain text alongsid
 **Tool calls:**
 ```
 1. search(query: "weather")
-   → [{ name: "WeatherCard", ... }]
+   → [{ name: "weather", ... }]
 
-2. get(name: "WeatherCard")
+2. get(name: "weather")
    → { ... }
 
-3. render(name: "WeatherCard", data: { ... })
-   → { error: "Rendering service unavailable" }
+3. render(name: "weather", data: { ... })
+   → { error: "R2 not configured — set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, and R2_PUBLIC_URL" }
 ```
 
 **Response:** Widget rendering failed, here's the information as text: Tokyo is currently 28°C with clear skies.
