@@ -17,84 +17,35 @@ export const WeatherCard: FunctionComponent<WeatherCardProps> = ({
 }) => {
 	return (
 		<div
-			style={{
-				width: "800px",
-				height: "400px",
-				background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-				borderRadius: "24px",
-				padding: "48px",
-				display: "flex",
-				flexDirection: "column",
-				justifyContent: "space-between",
-				fontFamily: "sans-serif",
-				color: "white",
-				position: "relative",
-				overflow: "hidden",
-			}}
+			tw="w-[800px] h-[400px] bg-[linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)] rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden"
 		>
 			{/* Accent bar */}
 			<div
-				style={{
-					position: "absolute",
-					top: 0,
-					left: 0,
-					right: 0,
-					height: "4px",
-					background: color,
-				}}
+				tw="absolute top-0 left-0 right-0 h-1"
+				style={{ background: color }}
 			/>
 
 			{/* Header */}
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "flex-start",
-				}}
-			>
-				<div
-					style={{
-						display: "flex",
-						flexDirection: "column",
-					}}
-				>
-					<div style={{ fontSize: "16px", opacity: 0.6, marginBottom: "4px" }}>
+			<div tw="flex justify-between items-start">
+				<div tw="flex flex-col">
+					<div tw="text-sm opacity-60 mb-1">
 						WEATHER
 					</div>
-					<div style={{ fontSize: "32px", fontWeight: 700 }}>{location}</div>
+					<div tw="text-[32px] font-bold">{location}</div>
 				</div>
-				<div style={{ fontSize: "64px" }}>{icon}</div>
+				<div tw="text-6xl">{icon}</div>
 			</div>
 
 			{/* Main content */}
-			<div
-				style={{
-					display: "flex",
-					alignItems: "flex-end",
-					justifyContent: "space-between",
-				}}
-			>
-				<div
-					style={{
-						display: "flex",
-						flexDirection: "column",
-					}}
-				>
+			<div tw="flex items-end justify-between">
+				<div tw="flex flex-col">
 					<div
-						style={{
-							fontSize: "96px",
-							fontWeight: 800,
-							lineHeight: 1,
-						}}
+						tw="text-[96px] font-extrabold leading-none"
 					>
 						{temp}
 					</div>
 					<div
-						style={{
-							fontSize: "24px",
-							opacity: 0.8,
-							marginTop: "8px",
-						}}
+						tw="text-2xl opacity-80 mt-2"
 					>
 						{condition}
 					</div>
@@ -103,11 +54,7 @@ export const WeatherCard: FunctionComponent<WeatherCardProps> = ({
 
 			{/* Footer */}
 			<div
-				style={{
-					fontSize: "14px",
-					opacity: 0.4,
-					textAlign: "right",
-				}}
+				tw="text-sm opacity-40 text-right"
 			>
 				Powered by Discord Widgets
 			</div>

@@ -27,120 +27,78 @@ export const RssFeedCard: FunctionComponent<RssFeedCardProps> = ({
 
 	return (
 		<div
-			style={{
-				width: "800px",
-				height: "480px",
-				background:
-					"linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)",
-				borderRadius: "24px",
-				display: "flex",
-				flexDirection: "column",
-				fontFamily: "sans-serif",
-				color: "white",
-				overflow: "hidden",
-			}}
+			tw="w-[800px] h-[480px] bg-[linear-gradient(135deg,#0f0f23,#1a1a2e,#16213e)] rounded-3xl flex flex-col font-sans text-white overflow-hidden"
 		>
-			{/* Accent bar — single child, no flex needed */}
+			{/* Accent bar */}
 			<div
-				style={{
-					height: "4px",
-					background: color,
-				}}
+				tw="h-1"
+				style={{ background: color }}
 			/>
 
 			{/* Content area */}
 			<div
-				style={{
-					display: "flex",
-					flex: 1,
-					padding: "40px 48px",
-					gap: hasThumbnail ? "32px" : "0",
-				}}
+				tw="flex flex-1 py-10 px-12"
+				style={{ gap: hasThumbnail ? "32px" : "0" }}
 			>
 				{/* Text column */}
 				<div
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						flex: 1,
-						justifyContent: "space-between",
-						minWidth: 0,
-					}}
+					tw="flex flex-col flex-1 justify-between min-w-0"
 				>
-					{/* Source — single text child */}
-					<div style={{ fontSize: "13px", opacity: 0.6, marginBottom: "16px" }}>
+					{/* Source */}
+					<div tw="text-[13px] opacity-60 mb-4">
 						{sourceLine}
 					</div>
 
-					{/* Title — single text child */}
+					{/* Title */}
 					<div
-						style={{
-							fontSize: "32px",
-							fontWeight: 700,
-							lineHeight: 1.25,
-							marginBottom: "20px",
-						}}
+						tw="text-[32px] font-bold leading-[1.25] mb-5"
 					>
 						{item.title}
 					</div>
 
-					{/* Summary — single text child */}
-					<div style={{ fontSize: "18px", lineHeight: 1.6, opacity: 0.75, flex: 1 }}>
+					{/* Summary */}
+					<div tw="text-lg leading-[1.6] opacity-75 flex-1">
 						{item.summary}
 					</div>
 
 					{/* Progress dots */}
-					<div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "24px" }}>
+					<div tw="flex items-center gap-2 mt-6">
 						<div
+							tw="h-2 rounded"
 							style={{
 								width: currentIndex === 0 ? "24px" : "8px",
-								height: "8px",
-								borderRadius: "4px",
 								background: currentIndex === 0 ? color : "rgba(255,255,255,0.2)",
 							}}
 						/>
 						<div
+							tw="h-2 rounded"
 							style={{
 								width: currentIndex === 1 ? "24px" : "8px",
-								height: "8px",
-								borderRadius: "4px",
 								background: currentIndex === 1 ? color : "rgba(255,255,255,0.2)",
 							}}
 						/>
 						<div
+							tw="h-2 rounded"
 							style={{
 								width: currentIndex === 2 ? "24px" : "8px",
-								height: "8px",
-								borderRadius: "4px",
 								background: currentIndex === 2 ? color : "rgba(255,255,255,0.2)",
 							}}
 						/>
-						<div style={{ fontSize: "13px", opacity: 0.4, marginLeft: "8px" }}>
+						<div tw="text-[13px] opacity-40 ml-2">
 							{`${currentIndex + 1} / ${totalItems}`}
 						</div>
 					</div>
 				</div>
 
-				{/* Thumbnail — single child (img) */}
+				{/* Thumbnail */}
 				{hasThumbnail ? (
 					<div
-						style={{
-							width: "280px",
-							height: "280px",
-							borderRadius: "16px",
-							overflow: "hidden",
-							flexShrink: 0,
-							alignSelf: "center",
-						}}
+						tw="w-[280px] h-[280px] rounded-2xl overflow-hidden shrink-0 self-center"
 					>
 						<img
 							src={item.thumbnail}
 							alt=""
-							style={{
-								width: "100%",
-								height: "100%",
-								objectFit: "cover",
-							}}
+							tw="w-full h-full object-cover"
 						/>
 					</div>
 				) : null}
@@ -148,44 +106,25 @@ export const RssFeedCard: FunctionComponent<RssFeedCardProps> = ({
 
 			{/* Navigation bar */}
 			<div
-				style={{
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "space-between",
-					padding: "16px 48px",
-					borderTop: "1px solid rgba(255,255,255,0.08)",
-					background: "rgba(0,0,0,0.2)",
-				}}
+				tw="flex items-center justify-between py-4 px-12 border-t border-white/[0.08] bg-black/20"
 			>
 				<div
-					style={{
-						fontSize: "14px",
-						fontWeight: 500,
-						opacity: currentIndex > 0 ? 0.8 : 0.25,
-					}}
+					tw="text-sm font-medium"
+					style={{ opacity: currentIndex > 0 ? 0.8 : 0.25 }}
 				>
 					{`← Previous`}
 				</div>
 				{item.link ? (
 					<div
-						style={{
-							fontSize: "14px",
-							fontWeight: 500,
-							color: color,
-							background: `${color}20`,
-							padding: "8px 20px",
-							borderRadius: "8px",
-						}}
+						tw="text-sm font-medium py-2 px-5 rounded-lg"
+						style={{ color, background: `${color}20` }}
 					>
 						{`🔗 Read Article`}
 					</div>
 				) : null}
 				<div
-					style={{
-						fontSize: "14px",
-						fontWeight: 500,
-						opacity: currentIndex < totalItems - 1 ? 0.8 : 0.25,
-					}}
+					tw="text-sm font-medium"
+					style={{ opacity: currentIndex < totalItems - 1 ? 0.8 : 0.25 }}
 				>
 					{`Next →`}
 				</div>

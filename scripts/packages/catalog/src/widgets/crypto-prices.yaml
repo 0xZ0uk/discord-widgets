@@ -1,0 +1,10 @@
+name: crypto-prices
+description: "CryptoPrices widget"
+component: CryptoPrices
+category: custom
+color: "#5865f2"
+fields:
+  - name: title
+    type: string
+    required: true
+buttons: []

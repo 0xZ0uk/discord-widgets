@@ -1,12 +1,12 @@
 import { renderToPng } from "./engine.js";
 import { WeatherCard } from "./components/WeatherCard.js";
 import { RssFeedCard } from "./components/RssFeedCard.js";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const DEMO_DIR = import.meta.dirname ?? ".";
 
-async function renderWeatherCard(fontData: ArrayBuffer) {
+async function renderWeatherCard() {
 	console.log("🎨 Rendering WeatherCard...");
 
 	const png = await renderToPng(
@@ -17,28 +17,24 @@ async function renderWeatherCard(fontData: ArrayBuffer) {
 			icon="⛅"
 			color="#3498db"
 		/>,
-		{
-			width: 800,
-			height: 400,
-			fonts: [{ name: "Liberation Sans", data: fontData }],
-		},
+		{ width: 800, height: 400 },
 	);
 
 	writeFileSync(join(DEMO_DIR, "weather-demo.png"), png);
 	console.log(`✅ WeatherCard (${(png.length / 1024).toFixed(1)}KB)`);
 }
 
-async function renderRssFeedCards(fontData: ArrayBuffer) {
+async function renderRssFeedCards() {
 	console.log("🎨 Rendering RssFeedCard items...");
 
 	const items = [
 		{
-			title: "Satori: Render React to SVG on the Server",
+			title: "Takumi: Rust-Powered JSX-to-Image Renderer",
 			summary:
-				"Vercel released Satori, a library that converts React components to SVG using Yoga for layout. It supports JSX, inline styles, and flexbox — perfect for generating OG images and widget cards without a browser.",
-			source: "Vercel Blog",
+				"Takumi is a Rust-based rendering engine that converts React components to images with full Tailwind CSS support. It handles emojis, gradients, and complex layouts natively — no browser required.",
+			source: "Takumi Blog",
 			date: "Jun 21, 2026",
-			link: "https://github.com/vercel/satori",
+			link: "https://takumi.kane.tw",
 		},
 		{
 			title: "Discord Introduces Activity Embeds for Rich Interactive Content",
@@ -66,11 +62,7 @@ async function renderRssFeedCards(fontData: ArrayBuffer) {
 				totalItems={items.length}
 				color="#5865f2"
 			/>,
-			{
-				width: 800,
-				height: 480,
-				fonts: [{ name: "Liberation Sans", data: fontData }],
-			},
+			{ width: 800, height: 480 },
 		);
 
 		writeFileSync(join(DEMO_DIR, `rss-demo-${i + 1}.png`), png);
@@ -79,12 +71,8 @@ async function renderRssFeedCards(fontData: ArrayBuffer) {
 }
 
 async function main() {
-	const fontData = readFileSync(
-		join(DEMO_DIR, "fonts/LiberationSans-Regular.ttf"),
-	);
-
-	await renderWeatherCard(fontData);
-	await renderRssFeedCards(fontData);
+	await renderWeatherCard();
+	await renderRssFeedCards();
 	console.log("\n🎉 Done!");
 }
 

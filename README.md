@@ -19,11 +19,10 @@ discord-widgets/
 ├── apps/
 │   └── mcp-server/          # MCP server (list, search, get, render tools)
 ├── packages/
-│   ├── render/               # Core: React → Satori (SVG) → Resvg (PNG)
+│   ├── render/               # Core: React → Takumi (Rust) → PNG
 │   │   └── src/
 │   │       ├── engine.ts     # Rendering pipeline
-│   │       ├── components/   # React widget components
-│   │       ├── fonts/        # Custom fonts for Satori
+│   │       ├── components/   # React widget components (Tailwind CSS)
 │   │       └── demo.tsx      # Test rendering
 │   ├── catalog/              # Widget schemas (Zod) + template definitions
 │   ├── config/               # Shared tsconfig.base.json
@@ -39,8 +38,7 @@ discord-widgets/
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| **Rendering** | [Satori](https://github.com/vercel/satori) | React JSX → SVG (no browser) |
-| **Image** | [@resvg/resvg-js](https://github.com/nicolo-ribaudo/resvg-js) | SVG → PNG (fast, native) |
+| **Rendering** | [Takumi](https://takumi.kane.tw/) | React JSX → PNG (Rust, Tailwind CSS) |
 | **Server** | [Hono](https://hono.dev/) + MCP SDK | Lightweight API + tool serving |
 | **Schema** | [Zod](https://zod.dev/) | Widget template validation |
 | **Monorepo** | [Turborepo](https://turbo.build/) + pnpm | Build orchestration |
@@ -64,13 +62,13 @@ pnpm install
 
 ### Run the Demo
 
-Render a sample WeatherCard widget:
+Render sample widget cards:
 
 ```bash
 pnpm -F @discord-widgets/render demo
 ```
 
-This creates `packages/render/src/weather-demo.png` — an 800×400 PNG rendered entirely from React components via Satori.
+This creates `packages/render/src/weather-demo.png` and `rss-demo-*.png` — images rendered entirely from React components via Takumi.
 
 ### Development
 
@@ -92,7 +90,7 @@ pnpm check
 
 ### 1. Define the Component
 
-Create a React component in `packages/render/src/components/`:
+Create a React component in `packages/render/src/components/` using Tailwind CSS via the `tw` prop:
 
 ```tsx
 import type { FunctionComponent } from "react";
@@ -109,18 +107,10 @@ export const MyWidget: FunctionComponent<MyWidgetProps> = ({
   color = "#5865f2",
 }) => (
   <div
-    style={{
-      width: "800px",
-      height: "400px",
-      background: "#1a1a2e",
-      borderRadius: "24px",
-      padding: "48px",
-      color: "white",
-      fontFamily: "sans-serif",
-    }}
+    tw="w-[800px] h-[400px] bg-[#1a1a2e] rounded-3xl p-12 text-white font-sans"
   >
-    <div style={{ fontSize: "16px", opacity: 0.6 }}>{title}</div>
-    <div style={{ fontSize: "72px", fontWeight: 800, marginTop: "16px" }}>
+    <div tw="text-sm opacity-60">{title}</div>
+    <div tw="text-[72px] font-extrabold mt-4">
       {value}
     </div>
   </div>
@@ -168,78 +158,45 @@ const png = await renderToPng(
 );
 ```
 
-## Fonts
+## Tailwind CSS (via `tw` prop)
 
-Satori requires fonts to be loaded explicitly — it has no access to the DOM or CSS. There are two approaches:
+Takumi supports full Tailwind CSS via the `tw` prop on any JSX element. Use it instead of inline `style` objects:
 
-### Option A: Local Fonts
+```tsx
+// ✅ Use tw prop
+<div tw="flex items-center justify-between p-4 bg-gray-900 rounded-xl">
 
-Place `.ttf`/`.otf` files in `packages/render/src/fonts/`:
-
-```typescript
-import { readFileSync } from "node:fs";
-
-const fontData = readFileSync("./src/fonts/Inter-Bold.ttf");
-
-const svg = await satori(component, {
-  fonts: [{
-    name: "Inter",
-    data: fontData,
-    weight: 700,
-  }],
-});
+// ❌ Avoid inline styles
+<div style={{ display: "flex", alignItems: "center", padding: "16px" }}>
 ```
 
-### Option B: Google Fonts (Recommended)
+For dynamic values that can't be expressed as Tailwind classes (e.g., user-provided colors), combine `tw` with `style`:
 
-Fetch fonts at runtime via the Google Fonts API:
-
-```typescript
-async function loadGoogleFont(
-  family: string,
-  weight: number = 400,
-): Promise<FontConfig> {
-  const url = `https://fonts.googleapis.com/css2?family=${family}:wght@${weight}`;
-  const css = await fetch(url).then((r) => r.text());
-
-  // Extract the font URL from CSS
-  const match = css.match(/url\((https:\/\/[^)]+)\)/);
-  if (!match) throw new Error(`Font not found: ${family}`);
-
-  const data = await fetch(match[1]).then((r) => r.arrayBuffer());
-
-  return { name: family, data, weight };
-}
-
-const interBold = await loadGoogleFont("Inter", 700);
+```tsx
+<div tw="absolute top-0 left-0 right-0 h-1" style={{ background: dynamicColor }}>
 ```
 
-**Important:** Satori does not support CSS classes, `@import`, or `<link>` tags. All fonts must be loaded as `ArrayBuffer` data and passed explicitly via the `fonts` option.
+### Supported CSS Features
 
-## Satori Constraints
-
-Satori doesn't support full CSS. Key limitations:
-
-| ✅ Supported | ❌ Not Supported |
-|-------------|-----------------|
-| `display: flex` | `display: grid` |
-| `position: absolute/relative` | `position: fixed/sticky` |
-| `background` (solid + gradients) | `backdrop-filter` |
-| `border-radius` | `box-shadow` (partial) |
-| `linear-gradient` | `radial-gradient` (partial) |
-| `transform` | `clip-path` |
-| `opacity` | `mix-blend-mode` |
-| Inline styles only | CSS classes / Tailwind |
-
-**Rule of thumb:** Use inline styles. Stick to flexbox. Test early, test often.
+| ✅ Supported | Examples |
+|-------------|---------|
+| Flexbox | `flex`, `flex-col`, `items-center`, `justify-between` |
+| Grid | `grid`, `grid-cols-3`, `gap-4` |
+| Gradients | `bg-gradient-to-r from-blue-500 to-purple-500` |
+| Backdrop filter | `backdrop-blur-lg`, `backdrop-brightness-50` |
+| Mix blend mode | `mix-blend-multiply` |
+| Clip path | `clip-path-[polygon(...)]` |
+| Animations | `animate-spin`, `@keyframes` |
+| Emoji | Native emoji rendering |
+| Custom fonts | Via `fonts` option in `render()` |
 
 ## Roadmap
 
 - [ ] **Phase 1: Rendering Pipeline** ← You are here
-  - [x] Satori engine setup
+  - [x] Takumi engine setup
   - [x] WeatherCard sample component
+  - [x] RssFeedCard component
   - [x] Demo script + render verification
-  - [ ] Font loading system (Google Fonts)
   - [ ] Image upload (R2/S3)
   - [ ] 3+ widget components
 - [ ] **Phase 2: MCP Server**

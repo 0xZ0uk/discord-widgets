@@ -1,6 +1,6 @@
 ---
 name: discord-widgets
-description: Discord widget system — React-rendered embed images via Satori, served through MCP tools. Use when responding to queries that could benefit from structured visual responses instead of plain text.
+description: Discord widget system — React-rendered embed images via Takumi, served through MCP tools. Use when responding to queries that could benefit from structured visual responses instead of plain text.
 version: 1.0.0
 ---
 
@@ -18,4 +18,4 @@ Render rich Discord embeds with React-generated images instead of plain text res
 Widget templates are defined in `packages/catalog/src/widgets/`.
 
 ## Rendering Pipeline
-React JSX → Satori (SVG) → Resvg (PNG) → Upload → Discord Embed
+React JSX → Takumi (Rust) → PNG → Upload → Discord Embed

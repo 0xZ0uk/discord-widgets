@@ -13,8 +13,7 @@
 	},
 	"dependencies": {
 		"react": "catalog:",
-		"satori": "catalog:",
-		"@resvg/resvg-js": "catalog:"
+		"takumi-js": "^1.8.7"
 	},
 	"devDependencies": {
 		"@discord-widgets/config": "workspace:*",

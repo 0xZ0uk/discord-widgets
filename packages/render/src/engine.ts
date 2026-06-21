@@ -1,50 +1,28 @@
-import satori from "satori";
-import { Resvg } from "@resvg/resvg-js";
+import { render } from "takumi-js";
 import type { ReactNode } from "react";
 
 export interface RenderOptions {
 	width?: number;
 	height?: number;
-	fonts?: FontConfig[];
-}
-
-export interface FontConfig {
-	name: string;
-	data: ArrayBuffer | Uint8Array;
-	style?: "normal" | "italic";
-	weight?: number;
 }
 
 /**
- * Render a React component to PNG buffer using Satori.
+ * Render a React component to PNG buffer using Takumi.
  *
- * Pipeline: React JSX → Satori (SVG) → Resvg (PNG) → Buffer
+ * Pipeline: React JSX → Takumi (Rust) → PNG → Buffer
  */
 export async function renderToPng(
 	component: ReactNode,
 	options: RenderOptions = {},
 ): Promise<Buffer> {
-	const { width = 800, height = 400, fonts = [] } = options;
+	const { width = 800, height = 400 } = options;
 
-	// Step 1: React → SVG via Satori
-	const svg = await satori(component, {
+	const buffer = await render(component, {
 		width,
 		height,
-		fonts: fonts.map((f) => ({
-			name: f.name,
-			data: f.data,
-			style: f.style ?? "normal",
-			weight: f.weight ?? 400,
-		})),
 	});
 
-	// Step 2: SVG → PNG via Resvg
-	const resvg = new Resvg(svg, {
-		fitTo: { mode: "width", value: width },
-	});
-	const pngData = resvg.render();
-
-	return Buffer.from(pngData.asPng());
+	return Buffer.from(buffer);
 }
 
 /**
