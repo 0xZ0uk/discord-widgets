@@ -1,0 +1,19 @@
+{
+	"name": "@discord-widgets/env",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@discord-widgets/config": "workspace:*",
+		"typescript": "catalog:"
+	}
+}

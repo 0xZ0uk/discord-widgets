@@ -1,0 +1,25 @@
+{
+	"name": "discord-widgets",
+	"private": true,
+	"workspaces": ["apps/*", "packages/*"],
+	"type": "module",
+	"scripts": {
+		"dev": "turbo dev",
+		"build": "turbo build",
+		"check-types": "turbo check-types",
+		"dev:mcp": "turbo -F @discord-widgets/mcp-server dev",
+		"check": "biome check --write ."
+	},
+	"dependencies": {
+		"@discord-widgets/env": "workspace:*",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@discord-widgets/config": "workspace:*",
+		"@biomejs/biome": "^2.4.16",
+		"@types/node": "catalog:",
+		"turbo": "^2.9.16",
+		"typescript": "catalog:"
+	},
+	"packageManager": "pnpm@10.32.1"
+}

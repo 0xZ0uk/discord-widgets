@@ -1,0 +1,23 @@
+{
+	"name": "@discord-widgets/render",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"react": "catalog:",
+		"satori": "catalog:",
+		"@resvg/resvg-js": "catalog:"
+	},
+	"devDependencies": {
+		"@discord-widgets/config": "workspace:*",
+		"@types/react": "catalog:",
+		"typescript": "catalog:"
+	}
+}

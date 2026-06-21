@@ -1,0 +1,3 @@
+{
+	"extends": "@discord-widgets/config/tsconfig.base.json"
+}

@@ -1,0 +1,16 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  esbuild: true
+catalog:
+  zod: ^4.1.13
+  typescript: ^6
+  "@types/node": ^22.13.14
+  react: ^19.2.6
+  react-dom: ^19.2.6
+  "@types/react": ^19.2.15
+  "@types/react-dom": ^19.2.3
+  hono: ^4.8.2
+  satori: ^0.13.0
+  "@resvg/resvg-js": ^2.6.0
