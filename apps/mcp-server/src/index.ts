@@ -33,7 +33,10 @@ app.post("/api/render", async (c) => {
 			return c.json({ error: "Missing required parameter: name" }, 400);
 		}
 		const result = await renderWidgetByName(name, data, { width, height });
-		return c.json(result);
+		// Resolve relative paths to absolute so the adapter can find the file
+		const { resolve } = await import("node:path");
+		const absUrl = resolve(result.url);
+		return c.json({ ...result, url: absUrl });
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
 		return c.json({ error: msg }, 500);
