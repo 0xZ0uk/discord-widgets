@@ -85,7 +85,7 @@ async function postWebhook(
 	});
 
 	if (response.status === 429) {
-		const body = (await response.json()) as { retry_after?: number };
+		const body = await response.json().catch(() => ({ retry_after: 1 })) as { retry_after?: number };
 		const retryAfter = body.retry_after ?? 1;
 		throw new DiscordRateLimitError(retryAfter);
 	}
@@ -106,6 +106,10 @@ export async function sendWidgetEmbed(
 
 	if (!webhookUrl) {
 		throw new Error("Webhook URL is required");
+	}
+
+	if (!imageUrl) {
+		throw new Error("Image URL is required");
 	}
 
 	let url: URL;
@@ -141,7 +145,7 @@ export async function sendWidgetEmbed(
 			{
 				type: 1,
 				components: validButtons.map((btn) => ({
-					type: 3,
+					type: 2,
 					style: BUTTON_STYLE_MAP[btn.style],
 					label: btn.label,
 					...(btn.url ? { url: btn.url } : {}),

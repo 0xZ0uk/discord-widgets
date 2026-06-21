@@ -127,3 +127,11 @@ Implemented Discord webhook delivery for rendered widget images. Created a `send
 1. Slice 7: Button interactions via Discord bot (requires `DISCORD_BOT_TOKEN` and interactions endpoint)
 2. End-to-end test with a real Discord webhook
 3. Consider rate limiting at the application level (not just retry on 429)
+
+### Code Review Findings (Fixed)
+
+1. **🔴 Wrong Discord button component type:** `discord.ts` used `type: 3` (String Select Menu) instead of `type: 2` (Button). Buttons would not render in Discord. Fixed to `type: 2`.
+
+2. **🟡 429 body parse could throw:** `response.json()` on rate-limit responses had no `.catch()` fallback. If Discord returns non-JSON on 429, the retry logic itself would crash. Added `.catch(() => ({ retry_after: 1 }))`.
+
+3. **🟡 `imageUrl` not validated:** `sendWidgetEmbed` validated `webhookUrl` but not `imageUrl`. Added empty-string check to prevent broken embeds.
