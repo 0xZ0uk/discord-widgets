@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { getWidget, loadWidgets } from "@discord-widgets/catalog";
+import { renderWidgetByName } from "@discord-widgets/render";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -79,6 +80,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 						},
 					},
 					required: ["query"],
+				},
+			},
+			{
+				name: "render",
+				description:
+					"Render a widget with data and return a hosted image URL",
+				inputSchema: {
+					type: "object",
+					properties: {
+						name: {
+							type: "string",
+							description: "The name of the widget to render",
+						},
+						data: {
+							type: "object",
+							description: "Data to pass to the widget component",
+							additionalProperties: true,
+						},
+						width: {
+							type: "number",
+							description: "Image width in pixels (default: 800)",
+						},
+						height: {
+							type: "number",
+							description: "Image height in pixels (default: 400)",
+						},
+					},
+					required: ["name", "data"],
 				},
 			},
 		],
@@ -217,6 +246,50 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 				},
 			],
 		};
+	}
+
+	if (name === "render") {
+		const widgetName = args?.name as string | undefined;
+		const data = (args?.data as Record<string, unknown>) ?? {};
+		const width = args?.width as number | undefined;
+		const height = args?.height as number | undefined;
+
+		if (!widgetName) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify({ error: "Missing required parameter: name" }),
+					},
+				],
+			};
+		}
+
+		try {
+			const result = await renderWidgetByName(widgetName, data, {
+				width,
+				height,
+			});
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(result, null, 2),
+					},
+				],
+			};
+		} catch (err) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify({
+							error: err instanceof Error ? err.message : String(err),
+						}),
+					},
+				],
+			};
+		}
 	}
 
 	throw new Error(`Unknown tool: ${name}`);

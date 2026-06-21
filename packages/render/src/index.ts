@@ -11,4 +11,6 @@ export type { RenderOptions } from "./engine.js";
 export { renderToDataUrl, renderToPng } from "./engine.js";
 export { renderToHostedUrl } from "./hosted.js";
 export { widgetRegistry } from "./registry.js";
+export type { RenderWidgetResult } from "./render-widget.js";
+export { renderWidgetByName } from "./render-widget.js";
 export { uploadToR2 } from "./upload.js";

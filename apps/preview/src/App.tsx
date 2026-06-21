@@ -48,13 +48,15 @@ export function App() {
 				const body = (await res.json()) as { error?: string };
 				throw new Error(body.error ?? `HTTP ${res.status}`);
 			}
-			const blob = await res.blob();
-			const url = URL.createObjectURL(blob);
+			const result = (await res.json()) as {
+				url: string;
+				width: number;
+				height: number;
+			};
 
-			// Revoke previous URL
 			setImageUrl((prev) => {
 				if (prev) URL.revokeObjectURL(prev);
-				return url;
+				return result.url;
 			});
 		} catch (err) {
 			setError(

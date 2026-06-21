@@ -2,13 +2,12 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Widget } from "@discord-widgets/catalog";
 import { WidgetSchema } from "@discord-widgets/catalog";
-import { renderToPng, widgetRegistry } from "@discord-widgets/render";
+import { renderWidgetByName, widgetRegistry } from "@discord-widgets/render";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { watch } from "chokidar";
 import { Hono } from "hono";
 import yaml from "js-yaml";
-import React from "react";
 
 // ─── Paths ──────────────────────────────────────────────────────────
 const PROJECT_ROOT = join(import.meta.dirname, "..", "..");
@@ -80,32 +79,23 @@ app.get("/api/widgets", (c) => {
 	return c.json(widgets);
 });
 
-// API: render a widget as PNG
+// API: render a widget and return hosted URL
 app.get("/api/render/:name", async (c) => {
 	const name = c.req.param("name");
-	const Component = widgetRegistry[name];
 
-	if (!Component) {
+	if (!widgetRegistry[name]) {
 		return c.json({ error: `Widget "${name}" not found in registry` }, 404);
 	}
 
 	const data = demoData[name] ?? {};
 
 	try {
-		const png = await renderToPng(
-			React.createElement(Component, data as Record<string, unknown>),
-			{
-				width: 800,
-				height: name === "rss-feed" ? 480 : 400,
-			},
-		);
-
-		return new Response(new Uint8Array(png), {
-			headers: {
-				"Content-Type": "image/png",
-				"Cache-Control": "no-cache",
-			},
+		const result = await renderWidgetByName(name, data, {
+			width: 800,
+			height: name === "rss-feed" ? 480 : 400,
 		});
+
+		return c.json(result);
 	} catch (err) {
 		console.error(`Render failed for "${name}":`, err);
 		return c.json({ error: "Render failed", details: String(err) }, 500);
