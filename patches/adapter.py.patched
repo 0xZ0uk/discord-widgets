@@ -980,7 +980,7 @@ class DiscordAdapter(BasePlatformAdapter):
                 # Register persistent WidgetView so button interactions on
                 # REST-sent widget messages are routed correctly.
                 try:
-                    adapter_self._client.add_view(WidgetView())
+                    adapter_self._client.add_view(WidgetView(buttons=[]))
                 except Exception:
                     logger.debug("WidgetView registration skipped", exc_info=True)
 
@@ -1752,7 +1752,21 @@ class DiscordAdapter(BasePlatformAdapter):
                             files.append(discord.File(_img_path, filename=_fname))
                             embeds[0].set_image(url=f"attachment://{_fname}")
 
-                        view = WidgetView() if components else None
+                        # Extract widget name from first button custom_id if available
+                        _widget_name = ""
+                        _widget_data = {}
+                        if components:
+                            for _row in components:
+                                if isinstance(_row, dict) and "components" in _row:
+                                    for _btn in _row["components"]:
+                                        _cid = _btn.get("custom_id", "")
+                                        if _cid.startswith("widget:"):
+                                            _parts = _cid.split(":")
+                                            if len(_parts) > 1:
+                                                _widget_name = _parts[1]
+                                            break
+
+                        view = WidgetView(buttons=components, widget_name=_widget_name, widget_data=_widget_data) if components else None
                         ref = None
                         if reply_to and self._reply_to_mode != "off":
                             try:
@@ -5894,7 +5908,7 @@ def _define_discord_view_classes() -> None:
     lazy install sets DISCORD_AVAILABLE=True but leaves the classes
     undefined, causing NameError on the first button interaction.
     """
-    global ExecApprovalView, SlashConfirmView, UpdatePromptView, ModelPickerView, ClarifyChoiceView, WidgetView
+    global ExecApprovalView, SlashConfirmView, UpdatePromptView, ModelPickerView, ClarifyChoiceView
 
     class ExecApprovalView(discord.ui.View):
         """
@@ -6770,39 +6784,135 @@ def _define_discord_view_classes() -> None:
                     await msg.edit(embed=embed, view=self)
                 except Exception:
                     pass
-    class WidgetView(discord.ui.View):
-        """View for widget embed buttons.
+    # ── MCP render helper ──────────────────────────────────────────────────────
+# These constants define where the MCP server's HTTP API lives.
+MCP_RENDER_URL = "http://localhost:3000/api/render"
 
-        Handles interactions on messages sent via the REST API
-        (send_embed / send_embed_with_attachment tools). Custom IDs
-        follow the pattern ``widget:<name>:<action>[:<param>]``.
+async def _mcp_render_widget(
+    widget_name: str,
+    widget_data: Optional[dict] = None,
+    width: int = 800,
+    height: int = 400,
+) -> Optional[str]:
+    """Call the MCP render endpoint to re-render a widget.
 
-        The ``render_fn`` callback is called on interaction and should
-        return a dict with embeds/components to update the message,
-        or None to acknowledge without changes.
-        """
+    Returns the path to the rendered PNG, or None on failure.
+    """
+    try:
+        import aiohttp
+        payload = {
+            "name": widget_name,
+            "data": widget_data or {},
+            "width": width,
+            "height": height,
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.post(MCP_RENDER_URL, json=payload, timeout=aiohttp.ClientTimeout(total=20)) as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    return result.get("url")
+                logger.warning("MCP render returned %d: %s", resp.status, await resp.text())
+                return None
+    except Exception as exc:
+        logger.warning("MCP render call failed: %s", exc)
+        return None
 
-        def __init__(self, render_fn=None, timeout=None):
-            super().__init__(timeout=timeout)
-            self.render_fn = render_fn
+_BUTTON_STYLE_MAP = {
+    1: discord.ButtonStyle.primary,
+    2: discord.ButtonStyle.secondary,
+    3: discord.ButtonStyle.success,
+    4: discord.ButtonStyle.danger,
+    5: discord.ButtonStyle.link,
+}
 
-        @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary, custom_id="widget:refresh")
-        async def on_refresh(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.defer()
-            if self.render_fn:
-                try:
-                    result = await self.render_fn(interaction)
-                    if result:
-                        await interaction.edit_original_response(**result)
-                except Exception as exc:
-                    logger.warning("Widget refresh failed: %s", exc)
+class WidgetView(discord.ui.View):
+    """Dynamic view for widget embed buttons.
 
-        @discord.ui.button(label="⏳", style=discord.ButtonStyle.secondary, custom_id="widget:placeholder")
-        async def on_placeholder(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.send_message("Widget interaction coming soon!", ephemeral=True)
+    Handles interactions on widget messages sent through the adapter.
+    Custom IDs follow ``widget:<name>:<action>[:<param>]``.
 
-        async def on_timeout(self):
-            pass
+    Buttons are added dynamically from the parsed ``[[buttons]]`` block.
+    On refresh-type actions, the view calls the MCP server to re-render
+    the widget and update the embed image.
+    """
+
+    def __init__(
+        self,
+        buttons: list,
+        widget_name: str = "",
+        widget_data: Optional[dict] = None,
+        timeout: Optional[float] = None,
+    ):
+        super().__init__(timeout=timeout)
+        self.widget_name = widget_name
+        self.widget_data = widget_data or {}
+
+        for btn in buttons:
+            style = _BUTTON_STYLE_MAP.get(btn.get("style", 2), discord.ButtonStyle.secondary)
+            label = btn.get("label", "\u200b")
+            custom_id = btn.get("custom_id")
+            url = btn.get("url")
+
+            if url and style is discord.ButtonStyle.link:
+                self.add_item(discord.ui.Button(style=style, label=label, url=url))
+            elif custom_id:
+                self.add_item(discord.ui.Button(style=style, label=label, custom_id=custom_id))
+
+    @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary, custom_id="widget:refresh", row=4)
+    async def on_refresh(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        try:
+            result = await _do_widget_interaction(self, interaction)
+            if result:
+                await interaction.edit_original_response(**result)
+        except Exception as exc:
+            logger.warning("Widget refresh failed: %s", exc)
+
+    async def on_timeout(self):
+        pass
+
+
+async def _do_widget_interaction(view: WidgetView, interaction: discord.Interaction) -> Optional[dict]:
+    """Handle a widget button interaction by re-rendering via MCP."""
+    custom_id = interaction.data.get("custom_id", "") if isinstance(interaction.data, dict) else ""
+
+    # Parse custom_id: widget:<name>:<action>[:<param>]
+    parts = custom_id.split(":")
+    action = parts[2] if len(parts) > 2 else "refresh"
+
+    if action == "refresh":
+        widget_name = view.widget_name or (parts[1] if len(parts) > 1 else "")
+        if not widget_name:
+            logger.warning("Widget refresh: no widget name in custom_id %r", custom_id)
+            return None
+
+        png_path = await _mcp_render_widget(widget_name, view.widget_data)
+        if not png_path:
+            await interaction.followup.send("Failed to re-render widget.", ephemeral=True)
+            return None
+
+        # Build updated embed — preserve title/description, swap image
+        msg = interaction.message
+        if msg and msg.embeds:
+            embed = msg.embeds[0]
+            import os as _os
+            abs_path = _os.path.join("/root/discord-widgets", png_path) if not png_path.startswith("/") else png_path
+            if _os.path.isfile(abs_path):
+                file = discord.File(abs_path, filename="widget.png")
+                embed.set_image(url="attachment://widget.png")
+                return {"embed": embed, "attachments": [file]}
+            else:
+                # Try relative to cwd
+                cwd_path = _os.path.join(_os.getcwd(), png_path)
+                if _os.path.isfile(cwd_path):
+                    file = discord.File(cwd_path, filename="widget.png")
+                    embed.set_image(url="attachment://widget.png")
+                    return {"embed": embed, "attachments": [file]}
+                logger.warning("Render PNG not found at %s or %s", abs_path, cwd_path)
+                return None
+
+    # Unknown action — acknowledge silently
+    return None
 
 if DISCORD_AVAILABLE:
     _define_discord_view_classes()

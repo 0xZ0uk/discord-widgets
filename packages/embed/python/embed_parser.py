@@ -30,7 +30,7 @@ BUTTON_STYLES = {
 
 EMBED_OPEN = re.compile(r"\[\[embed(?:\s+([^\]]*))?\]\]")
 EMBED_CLOSE = re.compile(r"\[\[/embed\]\]")
-ATTRIBUTE_PATTERN = re.compile(r'(\w+)=(?:"([^"]*)"|([\w#.-]+))')
+ATTRIBUTE_PATTERN = re.compile(r'(\w+)=(?:"([^"]*)"|`([^`]*)`|([\w#.-]+))')
 BUTTON_PATTERN = re.compile(r"\[([^\]]*)\](?:\(([^)]*)\))?")
 STYLE_PREFIX = re.compile(r"^Style:(\w+)\s+")
 CUSTOM_ID_PREFIX = re.compile(r"^custom_id:(\S+)\s+")
@@ -72,7 +72,7 @@ def parse_attributes(raw: str) -> dict:
         return attrs
     for match in ATTRIBUTE_PATTERN.finditer(raw):
         key = match.group(1)
-        value = match.group(2) if match.group(2) is not None else match.group(3)
+        value = match.group(2) if match.group(2) is not None else (match.group(3) if match.group(3) is not None else match.group(4))
         if value is not None:
             attrs[key] = value
     return attrs
@@ -139,9 +139,12 @@ def parse_embed_directives(content: str) -> tuple:
         block_content = after_open[:close_index]
         attrs = parse_attributes(open_capture)
 
-        # Extract MEDIA: path from the block
-        media_match = re.search(r"MEDIA:\s*(\S+)", block_content)
-        image_path = media_match.group(1) if media_match else None
+        # Extract image path: prefer image= attribute (survives extract_media),
+        # fall back to MEDIA: inside the block (standalone usage)
+        image_path = attrs.get("image")
+        if not image_path:
+            media_match = re.search(r"MEDIA:\s*(\S+)", block_content)
+            image_path = media_match.group(1) if media_match else None
 
         # Extract buttons section
         buttons_match = re.search(

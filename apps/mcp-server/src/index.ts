@@ -19,6 +19,27 @@ app.get("/health", (c) => {
 	return c.json({ status: "ok" });
 });
 
+// Render endpoint — called by the adapter's WidgetView on Refresh click
+app.post("/api/render", async (c) => {
+	try {
+		const body = await c.req.json<{
+			name: string;
+			data?: Record<string, unknown>;
+			width?: number;
+			height?: number;
+		}>();
+		const { name, data = {}, width, height } = body;
+		if (!name) {
+			return c.json({ error: "Missing required parameter: name" }, 400);
+		}
+		const result = await renderWidgetByName(name, data, { width, height });
+		return c.json(result);
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return c.json({ error: msg }, 500);
+	}
+});
+
 const server = new Server(
 	{
 		name: "discord-widgets",
@@ -398,9 +419,17 @@ async function main() {
 
 	console.error("MCP server running on stdio");
 
-	// Start HTTP server for health checks
+	// Start HTTP server for health checks and render API
 	const httpServer = createServer(async (req, res) => {
 		const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
+
+		// Read body for POST/PUT/PATCH requests
+		const chunks: Buffer[] = [];
+		for await (const chunk of req) {
+			chunks.push(chunk);
+		}
+		const body = Buffer.concat(chunks).toString();
+
 		const request = new Request(url.toString(), {
 			method: req.method,
 			headers: Object.fromEntries(
@@ -409,12 +438,13 @@ async function main() {
 					string,
 				][],
 			),
+			body: req.method !== "GET" && req.method !== "HEAD" ? body : undefined,
 		});
 
 		const response = await app.fetch(request);
 		res.writeHead(response.status, Object.fromEntries(response.headers));
-		const body = await response.text();
-		res.end(body);
+		const responseBody = await response.text();
+		res.end(responseBody);
 	});
 
 	httpServer.listen(PORT, () => {

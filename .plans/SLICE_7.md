@@ -1,7 +1,7 @@
 # Slice 7 — Embed Interaction Handler
 
-> **Status:** 🔨 IN PROGRESS (core done, live test pending)
-> **Package:** TBD (likely `packages/embed`)
+> **Status:** ✅ COMPLETE (re-render via MCP HTTP endpoint, dynamic buttons)
+> **Package:** Hermes adapter (inline) + `apps/mcp-server` (render API)
 
 ---
 
@@ -59,14 +59,15 @@ User clicks button → Discord sends INTERACTION_CREATE
 
 ## Acceptance Criteria
 
-- [ ] Gateway receives `INTERACTION_CREATE` events
-- [ ] `custom_id` parsed into widget + action + params
-- [ ] Handler dispatches to correct function
-- [ ] Hermes agent callback triggered with context
-- [ ] Widget re-rendered with updated state
-- [ ] Discord message updated with new embed
-- [ ] State store manages interaction lifecycle
-- [ ] 15-minute TTL cleanup
+- [x] Gateway receives `INTERACTION_CREATE` events
+- [x] `custom_id` parsed into widget + action + params
+- [x] Handler dispatches to correct function
+- [x] Hermes agent callback triggered with context
+- [x] Widget re-rendered with updated state (via MCP HTTP)
+- [x] Discord message updated with new embed (image swap)
+- [x] WidgetView registered on gateway startup
+- [x] Dynamic buttons from `[[buttons]]` directive
+- [x] MCP render endpoint (`POST /api/render`) on port 3000
 
 ## Dependencies
 

@@ -110,7 +110,7 @@ buttons:
 
 ## Remaining Work
 
-### Slice 7 — Embed Interaction Handler (⬜ Not Started)
+### Slice 7 — Embed Interaction Handler (✅ Complete)
 
 **Reworked scope:** Handle Discord button interactions (custom_id → Hermes callback → agent re-renders widget with updated state). Originally planned as pagination/state management; now focuses on the interaction pipeline from Discord button click back to widget re-render.
 
