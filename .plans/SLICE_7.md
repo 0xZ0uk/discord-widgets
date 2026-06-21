@@ -2,7 +2,9 @@
 
 ## Goal
 
-Discord embed buttons (Previous/Next/Link) are interactive — clicking them triggers actions like pagination or opening URLs. This completes the "Discord Frames" vision — widgets are not just images, they're mini-apps.
+Discord embed buttons (Previous/Next/Link) are interactive when widgets are delivered via **webhooks** (the secondary delivery flow). Clicking them triggers actions like pagination or opening URLs. This is only relevant for webhook-sent embeds — conversation attachments (`MEDIA:`) don't support interactive buttons.
+
+For the primary conversation flow, Hermes handles pagination manually: it renders the next/previous item and sends a new `MEDIA:` attachment when the user asks.
 
 ## Issues
 
@@ -44,6 +46,8 @@ The embed should carry metadata (hidden or in footer) to track pagination state:
 - `items` — the data array (or reference to it)
 
 For RSS feeds: the bot stores the feed items in memory (or a simple KV store) and paginates through them.
+
+**Note:** In the primary conversation flow, pagination works differently — the user asks "show next" and Hermes renders the next item as a new `MEDIA:` attachment.
 
 **Acceptance criteria:**
 - [ ] "Next" button shows the next item

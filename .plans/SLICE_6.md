@@ -2,7 +2,7 @@
 
 ## Goal
 
-Widget images are delivered to Discord channels as rich embeds with image, title, and buttons. This is the final delivery mechanism — connecting the rendering pipeline to the user's Discord experience.
+Widget images can be delivered to Discord channels via webhooks for **autonomous/scheduled pushes** — use cases where there's no triggering user message (e.g., a cron job posting daily weather). This is a secondary delivery mechanism. The primary flow (user asks → Hermes responds with `MEDIA:` attachment) doesn't need webhooks.
 
 ## Issues
 
@@ -77,6 +77,8 @@ Extend the `render` MCP tool (from Slice 4) with an optional `deliver` parameter
 // Output: { url: string, delivered: boolean }
 ```
 
+**Note:** This is for autonomous pushes only. In the primary conversation flow, Hermes renders the widget and includes the image via `MEDIA:` syntax — no webhook involved.
+
 **Acceptance criteria:**
 - [x] `render({ name: "weather", data: {...}, deliver: true })` sends embed to Discord
 - [x] Embed appears in the configured Discord channel
@@ -101,6 +103,8 @@ Extend the `render` MCP tool (from Slice 4) with an optional `deliver` parameter
 
 Implemented Discord webhook delivery for rendered widget images. Created a `sendWidgetEmbed()` utility that posts rich embeds (image, title, color, buttons) to Discord channels via webhooks, with rate limit retry and validation. Added Discord webhook configuration to the env schema and extended the MCP `render` tool with an optional `deliver` parameter that triggers webhook delivery after rendering.
 
+**Note:** This is the secondary delivery mechanism. The primary flow (Hermes renders → `MEDIA:` attachment in conversation) does not use webhooks.
+
 ### Tasks Completed
 
 | Task | Status | Notes |
@@ -122,12 +126,6 @@ Implemented Discord webhook delivery for rendered widget images. Created a `send
 
 - `pnpm turbo check-types` — all 5 packages pass (full turbo cache hit)
 
-### Next Steps
-
-1. Slice 7: Button interactions via Discord bot (requires `DISCORD_BOT_TOKEN` and interactions endpoint)
-2. End-to-end test with a real Discord webhook
-3. Consider rate limiting at the application level (not just retry on 429)
-
 ### Code Review Findings (Fixed)
 
 1. **🔴 Wrong Discord button component type:** `discord.ts` used `type: 3` (String Select Menu) instead of `type: 2` (Button). Buttons would not render in Discord. Fixed to `type: 2`.
@@ -135,3 +133,9 @@ Implemented Discord webhook delivery for rendered widget images. Created a `send
 2. **🟡 429 body parse could throw:** `response.json()` on rate-limit responses had no `.catch()` fallback. If Discord returns non-JSON on 429, the retry logic itself would crash. Added `.catch(() => ({ retry_after: 1 }))`.
 
 3. **🟡 `imageUrl` not validated:** `sendWidgetEmbed` validated `webhookUrl` but not `imageUrl`. Added empty-string check to prevent broken embeds.
+
+### Next Steps
+
+1. Slice 7: Button interactions via Discord bot (requires `DISCORD_BOT_TOKEN` and interactions endpoint)
+2. End-to-end test with a real Discord webhook
+3. Consider rate limiting at the application level (not just retry on 429)

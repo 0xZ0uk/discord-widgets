@@ -2,9 +2,9 @@
 
 ## Problem Statement
 
-Hermes (AI agent) currently responds to Discord messages with plain text. Many queries — weather, news, RSS feeds, crypto prices — would benefit from structured, visual responses. Discord embeds exist but are limited to static JSON. There's no system to dynamically generate rich widget images from React components and serve them as interactive Discord embeds.
+Hermes (AI agent) currently responds to Discord messages with plain text. Many queries — weather, news, RSS feeds, crypto prices — would benefit from structured, visual responses. Discord embeds via bots are limited to static JSON. There's no system to dynamically generate rich widget images from React components and serve them as visual responses in daily conversations.
 
-The vision: "Discord Frames" — Farcaster Frames-style mini-apps rendered as Discord embed images with interactive buttons, powered by a widget catalog and Takumi rendering engine.
+The vision: **Hermes renders styled widget cards as PNG images and delivers them as attachments in conversations.** When you ask "what's the weather in Porto?" — you get a polished weather card, not a wall of text.
 
 ## Solution
 
@@ -13,7 +13,13 @@ A monorepo system with four layers:
 1. **Rendering Engine** — React components rendered to PNG via Takumi (Rust, no browser). Components use Tailwind CSS via the `tw` prop.
 2. **Widget Catalog** — YAML-defined widget metadata (name, description, component, category, color, fields, buttons). Zod schemas for validation.
 3. **MCP Server** — Tools for Hermes to discover and render widgets: `list`, `search`, `get`, `render`.
-4. **Hermes Integration** — Skill that teaches Hermes when to use widgets, Discord webhook delivery, button interaction handling.
+4. **Hermes Integration** — Skill that teaches Hermes when to use widgets and how to deliver them (image attachments via `MEDIA:` syntax).
+
+### Delivery Model
+
+**Primary (conversations):** Hermes renders a widget → gets a file path/URL → includes it as `MEDIA:/path/to/widget.png` in the response. No webhook needed. This is how widgets work in daily conversations.
+
+**Secondary (autonomous pushes):** For scheduled/cron tasks that post to channels without a triggering message, a Discord webhook sends the widget as an embed. This is optional and not part of the core flow.
 
 ## Current State (what exists)
 
@@ -21,20 +27,20 @@ A monorepo system with four layers:
 - Takumi rendering engine (`packages/render/src/engine.ts`)
 - WeatherCard component (Tailwind, 800×400)
 - RssFeedCard component (Tailwind, 800×480, pagination dots, nav bar)
+- CryptoPrices component (Tailwind, 800×400)
 - Widget codegen script (`pnpm generate <name>`)
 - Widget catalog with YAML definitions (`packages/catalog/src/widgets/`)
 - Widget registry mapping names → components (`packages/render/src/registry.ts`)
 - Widget preview web app (`apps/preview/` — Hono + React + Vite + Tailwind)
 - Takumi skill (`.agents/skills/takumi/`)
-- Discord Widgets skill (`.agents/skills/discord-widgets/`)
+- Discord Widgets skill (`.agents/skills/discord-widgets/`) — v1.2.0 with MEDIA: delivery
 - Demo script rendering all widgets as PNG
+- Image upload to R2 (optional, falls back to local files)
+- MCP server with 4 tools: list, search, get, render
+- Discord webhook delivery (optional, for autonomous pushes)
 
 ### Not Started
-- Image upload to CDN (R2/S3) for hosted widget images
-- MCP server tools (list, search, get, render)
-- Hermes widget matching skill
-- Discord webhook delivery
-- Button interaction handler ( Previous/Next/Link)
+- Button interaction handler (Previous/Next pagination via bot)
 - Preview app polish (category filtering, metadata display, render comparison)
 - Community template system
 
@@ -49,12 +55,11 @@ A monorepo system with four layers:
 7. As a developer, I want widget templates defined in YAML, so that non-developers can edit metadata without touching code.
 8. As a Hermes operator, I want the MCP server to let Hermes discover available widgets, so that it can choose the right widget for a query.
 9. As a Hermes operator, I want Hermes to match user queries to widgets automatically, so that widget responses happen without manual configuration.
-10. As a Hermes operator, I want rendered widget images hosted on a CDN, so that Discord can display them reliably.
+10. As a Hermes operator, I want rendered widget images delivered as attachments in conversations, so that Discord displays them natively without external hosting.
 11. As a Hermes operator, I want button clicks on widget embeds to trigger actions (navigate pages, open links), so that widgets are interactive.
-12. As a developer, I want a third widget component (beyond Weather and RSS), so that the catalog demonstrates variety.
-13. As a developer, I want widget components to use Tailwind CSS, so that styling is fast and consistent.
-14. As a Hermes user, I want widget images to include the source/article link, so that I can click through to full content.
-15. As a Hermes operator, I want the system to handle multiple widget types (weather, news, crypto, polls, etc.), so that Hermes can respond to diverse queries visually.
+12. As a developer, I want widget components to use Tailwind CSS, so that styling is fast and consistent.
+13. As a Hermes user, I want widget images to include the source/article link, so that I can click through to full content.
+14. As a Hermes operator, I want the system to handle multiple widget types (weather, news, crypto, polls, etc.), so that Hermes can respond to diverse queries visually.
 
 ## Implementation Decisions
 
@@ -73,23 +78,24 @@ A monorepo system with four layers:
 - **Mock Discord buttons** — Below the rendered image, HTML/CSS buttons mock how Discord would display the embed's interactive elements.
 
 ### Image Hosting
-- **TBD** — Options: Cloudflare R2 (free tier, fast), Vercel Blob, or self-hosted. Need to decide before Phase 2.
+- **Local-first, R2 optional** — Widgets render to local files by default. When R2 is configured, they upload to CDN for persistent URLs. The local fallback means the system works without any cloud credentials.
 
 ### MCP Server
 - **Hono + MCP SDK** — Lightweight API server exposing tools for widget discovery and rendering.
-- **Four tools**: `list` (browse catalog), `search` (fuzzy match), `get` (template lookup), `render` (generate PNG and return URL).
+- **Four tools**: `list` (browse catalog), `search` (fuzzy match), `get` (template lookup), `render` (generate PNG and return path/URL).
 
 ### Hermes Integration
 - **Skill-based matching** — A Hermes skill that teaches the agent when to use widgets and how to select the right one.
-- **Discord webhook delivery** — Widget images sent via webhook with embed structure (image URL + buttons).
-- **Button interactions** — Bot handles button clicks ( Previous/Next pagination, link opens). Requires Discord bot with message component interactions.
+- **MEDIA: delivery** — Widget images are delivered as attachments in Hermes responses using `MEDIA:/path/to/file.png`. No webhook needed for conversation responses.
+- **Webhook delivery (secondary)** — Optional webhook for autonomous/scheduled pushes to channels. Not part of the core flow.
+- **Button interactions** — Bot handles button clicks ( Previous/Next pagination, link opens). Requires Discord bot with message component interactions. Only relevant for webhook-sent embeds (conversation attachments don't support interactive buttons).
 
 ## Testing Decisions
 
 - **Widget rendering** — Each component should render without errors. Test via `pnpm -F @discord-widgets/render demo`.
 - **Catalog parsing** — YAML files should parse to valid Widget schemas. Test via `loadWidgets()` function.
 - **MCP tools** — Each tool should return expected structure. Test with mock data.
-- **Integration** — End-to-end: query → widget match → render → embed delivery. Test manually in Discord.
+- **Integration** — End-to-end: query → widget match → render → image attachment. Test manually in Discord.
 - **Visual regression** — Screenshot comparison for widget renders (future).
 
 ## Out of Scope

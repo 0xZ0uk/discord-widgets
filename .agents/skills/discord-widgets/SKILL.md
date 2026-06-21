@@ -1,7 +1,7 @@
 ---
 name: discord-widgets
 description: "Detect when a query benefits from a widget response and use MCP tools to render visual cards instead of plain text."
-version: 1.1.0
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -11,6 +11,13 @@ metadata:
 ---
 
 # Discord Widgets — Widget Matching Skill
+
+## Purpose
+
+Discord Widgets let Hermes respond to queries with rendered PNG images instead of plain text. When someone asks about weather, crypto prices, or news, Hermes renders a styled widget card and delivers it as an image attachment in the conversation.
+
+**Primary flow:** User asks → Hermes renders widget → image attached to response.
+**Secondary flow (webhooks):** Autonomous/scheduled pushes to channels without a triggering message.
 
 ## When to Use Widgets
 
@@ -36,7 +43,7 @@ Use plain text when:
 
 ## Workflow
 
-When a query matches a widget trigger, follow this exact sequence:
+When a query matches a widget trigger, follow this sequence:
 
 ### Step 1: Search for matching widget
 
@@ -63,9 +70,9 @@ get(name: "crypto-prices")
 ### Step 3: Fetch the data
 
 Fetch real data for the widget using web search, APIs, or available data sources:
-- Weather: search for current weather data
-- RSS: search for latest news articles
-- Crypto: search for current price data
+- Weather: fetch from wttr.in, OpenWeatherMap, etc.
+- RSS: fetch from RSS feeds or news APIs
+- Crypto: fetch from CoinGecko, etc.
 
 ### Step 4: Render the widget
 
@@ -75,9 +82,25 @@ Use the MCP `render` tool with the fetched data:
 render(name: "weather", data: { location: "Porto", temp: "22°", condition: "Partly Cloudy", icon: "⛅", color: "#3498db" })
 ```
 
+The render tool returns `{ url, width, height }` where `url` is either:
+- A local file path (e.g. `./out/widget-xxx.png`) when R2 is not configured
+- A hosted URL (e.g. `https://pub-xxx.r2.dev/widget-xxx.png`) when R2 is configured
+
 ### Step 5: Respond with the image
 
-Return the hosted image URL in your response. Do not include plain text alongside the widget unless it adds context.
+Include the rendered image in your response using the `MEDIA:` syntax:
+
+```
+MEDIA:/absolute/path/to/widget-xxx.png
+```
+
+Or if the URL is a remote URL, use markdown image syntax:
+
+```
+![widget](https://pub-xxx.r2.dev/widget-xxx.png)
+```
+
+Keep the text response minimal — the widget IS the response. Add a short caption if it adds context (e.g. "Porto, Portugal — 22° Partly Cloudy").
 
 ## Fallback Behavior
 
@@ -153,10 +176,14 @@ Return the hosted image URL in your response. Do not include plain text alongsid
      icon: "⛅",
      color: "#3498db"
    })
-   → { url: "https://r2.example.com/widgets/weather-abc123.png" }
+   → { url: "./out/widget-1782048354350-zfmrld.png", width: 800, height: 400 }
 ```
 
-**Response:** [image: https://r2.example.com/widgets/weather-abc123.png]
+**Response:**
+```
+MEDIA:/root/discord-widgets/out/widget-1782048354350-zfmrld.png
+Porto, Portugal — 22° Partly Cloudy
+```
 
 ---
 
@@ -184,10 +211,13 @@ Return the hosted image URL in your response. Do not include plain text alongsid
      totalItems: 3,
      color: "#5865f2"
    })
-   → { url: "https://r2.example.com/widgets/rss-abc123.png" }
+   → { url: "./out/widget-1782048354350-abc123.png", width: 800, height: 480 }
 ```
 
-**Response:** [image: https://r2.example.com/widgets/rss-abc123.png]
+**Response:**
+```
+MEDIA:/root/discord-widgets/out/widget-1782048354350-abc123.png
+```
 
 ---
 
@@ -211,10 +241,14 @@ Return the hosted image URL in your response. Do not include plain text alongsid
      source: "CoinGecko",
      color: "#f7931a"
    })
-   → { url: "https://r2.example.com/widgets/crypto-abc123.png" }
+   → { url: "./out/widget-1782048354350-def456.png", width: 800, height: 400 }
 ```
 
-**Response:** [image: https://r2.example.com/widgets/crypto-abc123.png]
+**Response:**
+```
+MEDIA:/root/discord-widgets/out/widget-1782048354350-def456.png
+Bitcoin (BTC) — $67,500 (+2.3%)
+```
 
 ---
 
