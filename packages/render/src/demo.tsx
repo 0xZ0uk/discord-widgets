@@ -1,8 +1,10 @@
-import { renderToPng } from "./engine.js";
-import { WeatherCard } from "./components/WeatherCard.js";
-import { RssFeedCard } from "./components/RssFeedCard.js";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { env } from "@discord-widgets/env";
+import { RssFeedCard } from "./components/RssFeedCard.js";
+import { WeatherCard } from "./components/WeatherCard.js";
+import { renderToPng } from "./engine.js";
+import { renderToHostedUrl } from "./hosted.js";
 
 const DEMO_DIR = import.meta.dirname ?? ".";
 
@@ -20,8 +22,29 @@ async function renderWeatherCard() {
 		{ width: 800, height: 400 },
 	);
 
-	writeFileSync(join(DEMO_DIR, "weather-demo.png"), png);
-	console.log(`✅ WeatherCard (${(png.length / 1024).toFixed(1)}KB)`);
+	const localPath = join(DEMO_DIR, "weather-demo.png");
+	writeFileSync(localPath, png);
+	console.log(
+		`✅ WeatherCard (${(png.length / 1024).toFixed(1)}KB) → ${localPath}`,
+	);
+
+	if (env.R2_BUCKET_NAME) {
+		try {
+			const url = await renderToHostedUrl(
+				<WeatherCard
+					location="Porto, Portugal"
+					temp="22°"
+					condition="Partly Cloudy"
+					icon="⛅"
+					color="#3498db"
+				/>,
+				{ width: 800, height: 400 },
+			);
+			console.log(`🔗 R2 URL: ${url}`);
+		} catch (err) {
+			console.error(`❌ R2 upload failed: ${err}`);
+		}
+	}
 }
 
 async function renderRssFeedCards() {
@@ -55,9 +78,10 @@ async function renderRssFeedCards() {
 	];
 
 	for (let i = 0; i < items.length; i++) {
+		const item = items[i]!;
 		const png = await renderToPng(
 			<RssFeedCard
-				item={items[i]}
+				item={item}
 				currentIndex={i}
 				totalItems={items.length}
 				color="#5865f2"
@@ -65,8 +89,28 @@ async function renderRssFeedCards() {
 			{ width: 800, height: 480 },
 		);
 
-		writeFileSync(join(DEMO_DIR, `rss-demo-${i + 1}.png`), png);
-		console.log(`✅ RssFeedCard #${i + 1} (${(png.length / 1024).toFixed(1)}KB)`);
+		const localPath = join(DEMO_DIR, `rss-demo-${i + 1}.png`);
+		writeFileSync(localPath, png);
+		console.log(
+			`✅ RssFeedCard #${i + 1} (${(png.length / 1024).toFixed(1)}KB) → ${localPath}`,
+		);
+
+		if (env.R2_BUCKET_NAME) {
+			try {
+				const url = await renderToHostedUrl(
+					<RssFeedCard
+						item={item}
+						currentIndex={i}
+						totalItems={items.length}
+						color="#5865f2"
+					/>,
+					{ width: 800, height: 480 },
+				);
+				console.log(`🔗 R2 URL: ${url}`);
+			} catch (err) {
+				console.error(`❌ R2 upload failed for #${i + 1}: ${err}`);
+			}
+		}
 	}
 }
 

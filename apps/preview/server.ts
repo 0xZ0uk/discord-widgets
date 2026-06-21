@@ -93,12 +93,12 @@ app.get("/api/render/:name", async (c) => {
 	const data = demoData[name] ?? {};
 
 	try {
-		const png = await renderToPng(React.createElement(Component, data as Record<string, string>), {
+		const png = await renderToPng(React.createElement(Component, data as Record<string, unknown>), {
 			width: 800,
 			height: name === "rss-feed" ? 480 : 400,
 		});
 
-		return new Response(png, {
+		return new Response(new Uint8Array(png), {
 			headers: {
 				"Content-Type": "image/png",
 				"Cache-Control": "no-cache",

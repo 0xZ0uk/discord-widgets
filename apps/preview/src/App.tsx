@@ -25,10 +25,11 @@ export function App() {
 	useEffect(() => {
 		fetch("/api/widgets")
 			.then((r) => r.json())
-			.then((data: Widget[]) => {
-				setWidgets(data);
-				if (data.length > 0 && !selected) {
-					setSelected(data[0].name);
+			.then((data: unknown) => {
+				const widgets = data as Widget[];
+				setWidgets(widgets);
+				if (widgets.length > 0 && !selected) {
+					setSelected(widgets[0]?.name ?? '');
 				}
 			})
 			.catch((err) => setError(`Failed to load widgets: ${err.message}`));
@@ -44,7 +45,7 @@ export function App() {
 		try {
 			const res = await fetch(`/api/render/${name}`);
 			if (!res.ok) {
-				const body = await res.json();
+				const body = await res.json() as { error?: string };
 				throw new Error(body.error ?? `HTTP ${res.status}`);
 			}
 			const blob = await res.blob();
@@ -74,13 +75,13 @@ export function App() {
 
 	const goPrev = () => {
 		if (!isFirst && currentIndex > 0) {
-			setSelected(widgets[currentIndex - 1].name);
+			setSelected(widgets[currentIndex - 1]?.name ?? '');
 		}
 	};
 
 	const goNext = () => {
 		if (!isLast && currentIndex < widgets.length - 1) {
-			setSelected(widgets[currentIndex + 1].name);
+			setSelected(widgets[currentIndex + 1]?.name ?? '');
 		}
 	};
 
@@ -107,7 +108,7 @@ export function App() {
 						<select
 							id="widget-select"
 							value={selected}
-							onChange={(e) => setSelected(e.target.value)}
+							onChange={(e) => setSelected((e.target as HTMLSelectElement).value)}
 							className="bg-[#1e1f22] text-white border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5865f2] cursor-pointer"
 						>
 							{widgets.map((w) => (
