@@ -1755,18 +1755,19 @@ class DiscordAdapter(BasePlatformAdapter):
                         # Extract widget name from first button custom_id if available
                         _widget_name = ""
                         _widget_data = {}
+                        _flat_buttons = []
                         if components:
                             for _row in components:
                                 if isinstance(_row, dict) and "components" in _row:
                                     for _btn in _row["components"]:
+                                        _flat_buttons.append(_btn)
                                         _cid = _btn.get("custom_id", "")
-                                        if _cid.startswith("widget:"):
+                                        if _cid.startswith("widget:") and not _widget_name:
                                             _parts = _cid.split(":")
                                             if len(_parts) > 1:
                                                 _widget_name = _parts[1]
-                                            break
 
-                        view = WidgetView(buttons=components, widget_name=_widget_name, widget_data=_widget_data) if components else None
+                        view = WidgetView(buttons=_flat_buttons, widget_name=_widget_name, widget_data=_widget_data) if _flat_buttons else None
                         ref = None
                         if reply_to and self._reply_to_mode != "off":
                             try:
@@ -6832,8 +6833,8 @@ class WidgetView(discord.ui.View):
     Custom IDs follow ``widget:<name>:<action>[:<param>]``.
 
     Buttons are added dynamically from the parsed ``[[buttons]]`` block.
-    On refresh-type actions, the view calls the MCP server to re-render
-    the widget and update the embed image.
+    Every button click calls _do_widget_interaction which re-renders
+    via the MCP server.
     """
 
     def __init__(
@@ -6854,19 +6855,23 @@ class WidgetView(discord.ui.View):
             url = btn.get("url")
 
             if url and style is discord.ButtonStyle.link:
-                self.add_item(discord.ui.Button(style=style, label=label, url=url))
+                item = discord.ui.Button(style=style, label=label, url=url)
             elif custom_id:
-                self.add_item(discord.ui.Button(style=style, label=label, custom_id=custom_id))
+                item = discord.ui.Button(style=style, label=label, custom_id=custom_id)
+                # All button clicks (Refresh, Details, etc.) route through the same handler
+                item.callback = self._handle_button_click
+            else:
+                continue
+            self.add_item(item)
 
-    @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary, custom_id="widget:refresh", row=4)
-    async def on_refresh(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def _handle_button_click(self, interaction: discord.Interaction):
         await interaction.response.defer()
         try:
             result = await _do_widget_interaction(self, interaction)
             if result:
                 await interaction.edit_original_response(**result)
         except Exception as exc:
-            logger.warning("Widget refresh failed: %s", exc)
+            logger.warning("Widget interaction failed: %s", exc)
 
     async def on_timeout(self):
         pass
