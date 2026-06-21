@@ -1,6 +1,6 @@
 # Slice 7 — Embed Interaction Handler
 
-> **Status:** ⬜ NOT STARTED  
+> **Status:** 🔨 IN PROGRESS (core done, live test pending)
 > **Package:** TBD (likely `packages/embed`)
 
 ---
