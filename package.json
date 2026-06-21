@@ -8,7 +8,9 @@
 		"build": "turbo build",
 		"check-types": "turbo check-types",
 		"dev:mcp": "turbo -F @discord-widgets/mcp-server dev",
-		"check": "biome check --write ."
+		"check": "biome check --write .",
+		"generate": "tsx scripts/generate-widget.ts",
+		"gen": "tsx scripts/generate-widget.ts"
 	},
 	"dependencies": {
 		"@discord-widgets/env": "workspace:*",
@@ -18,6 +20,7 @@
 		"@discord-widgets/config": "workspace:*",
 		"@biomejs/biome": "^2.4.16",
 		"@types/node": "catalog:",
+		"tsx": "^4.19.2",
 		"turbo": "^2.9.16",
 		"typescript": "catalog:"
 	},
