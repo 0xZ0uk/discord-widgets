@@ -1,0 +1,25 @@
+*** Begin Patch
+*** Update File: gateway/run.py
+@@ _sanitize_gateway_final_response @@
+                 response = _sanitize_gateway_final_response(source.platform, response)
++
++            # Inject MEDIA: file paths into [[embed]] image attributes so
++            # the embed fast-path can attach them as Discord file uploads.
++            # This must happen before streaming splits the response into chunks.
++            if response and "[[embed" in response and "MEDIA:" in response:
++                import re as _re
++                _media_matches = _re.findall(r"MEDIA:((?:[A-Za-z]:[/\\]|/|~/)\S+\.(?:png|jpe?g|gif|webp))", response)
++                if _media_matches:
++                    _first_media = _media_matches[0]
++                    # Inject image attribute into first [[embed]] if not already present
++                    def _inject_image(m):
++                        tag = m.group(0)
++                        if "image=" not in tag:
++                            # Prefix with "embed:" so extract_local_files ignores it
++                            tag = tag.rstrip("]") + f' image="embed:{_first_media}"]'
++                        return tag
++                    response = _re.sub(r"\[\[embed\s+[^\]]*\]\]", _inject_image, response, count=1)
++                    # Strip MEDIA: tags from response (they've been absorbed)
++                    response = _re.sub(r"MEDIA:\S+", "", response).strip()
++
+*** End Patch

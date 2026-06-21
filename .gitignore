@@ -10,3 +10,4 @@ pnpm-lock.yaml
 *.demo.png
 
 out/
+patches/backup-*/
