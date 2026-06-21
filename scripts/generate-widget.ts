@@ -7,7 +7,7 @@
  * Example: pnpm generate crypto-prices
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname ?? ".", "..");
@@ -41,7 +41,7 @@ function componentTemplate(name: string): string {
 		'\tcolor = "#5865f2",',
 		"}) => {",
 		"\treturn (",
-		'\t\t<div style={{',
+		"\t\t<div style={{",
 		'\t\t\twidth: "800px",',
 		'\t\t\theight: "480px",',
 		'\t\t\tbackground: "#0f0f23",',
@@ -93,19 +93,21 @@ function main() {
 	const args = process.argv.slice(2);
 
 	if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
-		console.log([
-			"",
-			"Discord Widgets — Widget Codegen",
-			"",
-			"Usage:",
-			"  pnpm generate <widget-name>",
-			"  pnpm gen <widget-name>",
-			"",
-			"Examples:",
-			"  pnpm generate rss-feed",
-			"  pnpm generate crypto-prices",
-			"",
-		].join("\n"));
+		console.log(
+			[
+				"",
+				"Discord Widgets — Widget Codegen",
+				"",
+				"Usage:",
+				"  pnpm generate <widget-name>",
+				"  pnpm gen <widget-name>",
+				"",
+				"Examples:",
+				"  pnpm generate rss-feed",
+				"  pnpm generate crypto-prices",
+				"",
+			].join("\n"),
+		);
 		process.exit(0);
 	}
 
@@ -139,24 +141,32 @@ function main() {
 
 	// Update index.ts
 	const index = readFileSync(INDEX_PATH, "utf-8");
-	const exp = 'export { ' + pascal + ' } from "./components/' + pascal + '.js";';
-	const typ = 'export type { ' + pascal + 'Props } from "./components/' + pascal + '.js";';
+	const exp =
+		"export { " + pascal + ' } from "./components/' + pascal + '.js";';
+	const typ =
+		"export type { " +
+		pascal +
+		'Props } from "./components/' +
+		pascal +
+		'.js";';
 
 	if (!index.includes(exp)) {
 		writeFileSync(INDEX_PATH, index.trimEnd() + "\n" + exp + "\n" + typ + "\n");
 		console.log("Updated: packages/render/src/index.ts");
 	}
 
-	console.log([
-		"",
-		'Done! Widget "' + kebab + '" scaffolded.',
-		"",
-		"Next:",
-		"  1. Edit packages/render/src/components/" + pascal + ".tsx",
-		"  2. Edit packages/catalog/src/widgets/" + kebab + ".yaml",
-		"  3. pnpm -F @discord-widgets/render demo",
-		"",
-	].join("\n"));
+	console.log(
+		[
+			"",
+			'Done! Widget "' + kebab + '" scaffolded.',
+			"",
+			"Next:",
+			"  1. Edit packages/render/src/components/" + pascal + ".tsx",
+			"  2. Edit packages/catalog/src/widgets/" + kebab + ".yaml",
+			"  3. pnpm -F @discord-widgets/render demo",
+			"",
+		].join("\n"),
+	);
 }
 
 main();

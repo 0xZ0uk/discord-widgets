@@ -1,14 +1,13 @@
-import { Hono } from "hono";
-import { serveStatic } from "@hono/node-server/serve-static";
-import { serve } from "@hono/node-server";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import yaml from "js-yaml";
-import { widgetRegistry } from "@discord-widgets/render";
-import { WidgetSchema } from "@discord-widgets/catalog";
 import type { Widget } from "@discord-widgets/catalog";
-import { renderToPng } from "@discord-widgets/render";
+import { WidgetSchema } from "@discord-widgets/catalog";
+import { renderToPng, widgetRegistry } from "@discord-widgets/render";
+import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { watch } from "chokidar";
+import { Hono } from "hono";
+import yaml from "js-yaml";
 import React from "react";
 
 // ─── Paths ──────────────────────────────────────────────────────────
@@ -93,10 +92,13 @@ app.get("/api/render/:name", async (c) => {
 	const data = demoData[name] ?? {};
 
 	try {
-		const png = await renderToPng(React.createElement(Component, data as Record<string, unknown>), {
-			width: 800,
-			height: name === "rss-feed" ? 480 : 400,
-		});
+		const png = await renderToPng(
+			React.createElement(Component, data as Record<string, unknown>),
+			{
+				width: 800,
+				height: name === "rss-feed" ? 480 : 400,
+			},
+		);
 
 		return new Response(new Uint8Array(png), {
 			headers: {
@@ -117,7 +119,10 @@ if (existsSync(distPath)) {
 	app.get("*", serveStatic({ root: "./dist/client", path: "index.html" }));
 } else {
 	app.get("*", (c) => {
-		return c.text("Dev mode: use Vite dev server at http://localhost:5173", 200);
+		return c.text(
+			"Dev mode: use Vite dev server at http://localhost:5173",
+			200,
+		);
 	});
 }
 

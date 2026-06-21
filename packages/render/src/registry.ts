@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
-import { WeatherCard } from "./components/WeatherCard.js";
-import { RssFeedCard } from "./components/RssFeedCard.js";
 import { CryptoPrices } from "./components/CryptoPrices.js";
+import { RssFeedCard } from "./components/RssFeedCard.js";
+import { WeatherCard } from "./components/WeatherCard.js";
 
 /**
  * Registry mapping widget names (from catalog YAML) to their React components.

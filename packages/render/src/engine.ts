@@ -1,6 +1,6 @@
-import { render } from "takumi-js";
 import type { ReactNode } from "react";
 import React from "react";
+import { render } from "takumi-js";
 
 // Ensure React is globally available for Takumi's JSX processing
 // (needed when tsx doesn't properly apply the react-jsx transform)

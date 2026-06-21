@@ -13,6 +13,7 @@
 		"@discord-widgets/render": "workspace:*",
 		"@discord-widgets/catalog": "workspace:*",
 		"@discord-widgets/ui": "workspace:*",
+		"@modelcontextprotocol/sdk": "^1.12.1",
 		"hono": "catalog:",
 		"zod": "catalog:"
 	},

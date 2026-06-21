@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import yaml from "js-yaml";
-import { WidgetSchema, type Widget } from "./schemas.js";
+import { type Widget, WidgetSchema } from "./schemas.js";
 
 /**
  * Load all widget definitions from YAML files in the catalog.
@@ -15,7 +15,9 @@ export function loadWidgets(): Widget[] {
 
 	let files: string[];
 	try {
-		files = readdirSync(widgetsDir).filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
+		files = readdirSync(widgetsDir).filter(
+			(f) => f.endsWith(".yaml") || f.endsWith(".yml"),
+		);
 	} catch {
 		return [];
 	}
@@ -34,5 +36,5 @@ export function getWidget(name: string): Widget | undefined {
 	return loadWidgets().find((w) => w.name === name);
 }
 
-export { WidgetSchema } from "./schemas.js";
 export type { Widget } from "./schemas.js";
+export { WidgetSchema } from "./schemas.js";

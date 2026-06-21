@@ -1,7 +1,10 @@
 {
 	"name": "discord-widgets",
 	"private": true,
-	"workspaces": ["apps/*", "packages/*"],
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
 	"type": "module",
 	"scripts": {
 		"dev": "turbo dev",

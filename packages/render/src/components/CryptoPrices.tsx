@@ -21,9 +21,7 @@ export const CryptoPrices: FunctionComponent<CryptoPricesProps> = ({
 	const changeColor = isPositive ? "#00d97e" : "#e63946";
 
 	return (
-		<div
-			tw="w-[800px] h-[400px] bg-[linear-gradient(135deg,#0f0f23,#1a1a2e,#16213e)] rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden"
-		>
+		<div tw="w-[800px] h-[400px] bg-[linear-gradient(135deg,#0f0f23,#1a1a2e,#16213e)] rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden">
 			{/* Accent bar */}
 			<div
 				tw="absolute top-0 left-0 right-0 h-1"
@@ -45,10 +43,7 @@ export const CryptoPrices: FunctionComponent<CryptoPricesProps> = ({
 			<div tw="flex items-end justify-between">
 				<div tw="flex flex-col">
 					<div tw="text-[96px] font-extrabold leading-none">{price}</div>
-					<div
-						tw="text-2xl font-semibold mt-2"
-						style={{ color: changeColor }}
-					>
+					<div tw="text-2xl font-semibold mt-2" style={{ color: changeColor }}>
 						{change24h}
 					</div>
 					<div tw="text-sm opacity-60 mt-1">24h change</div>

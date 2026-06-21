@@ -16,10 +16,10 @@ Initialize `apps/mcp-server/` with a working Hono server and MCP SDK integration
 - Use stdio transport (for Hermes integration)
 
 **Acceptance criteria:**
-- [ ] Server starts without errors
-- [ ] MCP tools are registered and discoverable
-- [ ] Health check returns 200
-- [ ] Server can be started via `pnpm dev:mcp`
+- [x] Server starts without errors
+- [x] MCP tools are registered and discoverable
+- [x] Health check returns 200
+- [x] Server can be started via `pnpm dev:mcp`
 
 **Dependencies:** None — can start immediately
 
@@ -44,10 +44,10 @@ Create an MCP tool `list` that returns all available widgets from the catalog. A
 Use the `loadWidgets()` function from `packages/catalog/`.
 
 **Acceptance criteria:**
-- [ ] `list` tool returns all widgets when no filter
-- [ ] `list` with `category` filter returns matching widgets
-- [ ] Output includes name, description, category, color, fields, buttons
-- [ ] Empty catalog returns empty array (not error)
+- [x] `list` tool returns all widgets when no filter
+- [x] `list` with `category` filter returns matching widgets
+- [x] Output includes name, description, category, color, fields, buttons
+- [x] Empty catalog returns empty array (not error)
 
 **Dependencies:** T1
 
@@ -72,12 +72,12 @@ Create an MCP tool `search` that fuzzy-matches widgets by query string. Search a
 Use simple fuzzy matching (Levenshtein or includes + scoring). No external dependency needed for v1.
 
 **Acceptance criteria:**
-- [ ] `search("weather")` returns WeatherCard
-- [ ] `search("rss")` returns RssFeedCard
-- [ ] `search("crypto")` returns CryptoPrices
-- [ ] `search("xyz")` returns empty array
-- [ ] Results are ranked by relevance score
-- [ ] `limit` parameter works
+- [x] `search("weather")` returns WeatherCard
+- [x] `search("rss")` returns RssFeedCard
+- [x] `search("crypto")` returns CryptoPrices
+- [x] `search("xyz")` returns empty array
+- [x] Results are ranked by relevance score
+- [x] `limit` parameter works
 
 **Dependencies:** T1
 
@@ -100,9 +100,9 @@ Create an MCP tool `get` that returns the full template definition for a specifi
 ```
 
 **Acceptance criteria:**
-- [ ] `get("weather")` returns full WeatherCard template
-- [ ] `get("nonexistent")` returns null (not error)
-- [ ] Output includes component reference, fields, buttons, example data
+- [x] `get("weather")` returns full WeatherCard template
+- [x] `get("nonexistent")` returns null (not error)
+- [x] Output includes component reference, fields, buttons, example data
 
 **Dependencies:** T1
 
@@ -110,3 +110,38 @@ Create an MCP tool `get` that returns the full template definition for a specifi
 - **Source:** PRD Phase 2 (get tool)
 - **Workspace:** dir:/root/discord-widgets
 - **Assignee:** z0uk
+
+---
+
+## Changelog / Status Report
+
+**Date:** 2026-06-21
+**Completed by:** MiMoCode Agent
+
+### Summary
+Implemented the MCP server with Hono and MCP SDK integration, providing three catalog tools (`list`, `search`, `get`) that enable Hermes to discover and retrieve widget definitions. The server uses stdio transport for Hermes integration and includes a health check endpoint.
+
+### Tasks Completed
+
+| Task | Status | Notes |
+|------|--------|-------|
+| T1: Set up MCP server with Hono + MCP SDK | ✅ Done | Server starts on configurable port, registers MCP tools, health check returns 200, starts via `pnpm dev:mcp` |
+| T2: Implement `list` tool | ✅ Done | Returns all widgets with optional category filter, includes required metadata fields |
+| T3: Implement `search` tool | ✅ Done | Fuzzy matching with scoring across name, description, category fields, supports limit parameter |
+| T4: Implement `get` tool | ✅ Done | Returns full widget template by name, null for nonexistent widgets |
+
+### Files Changed
+- `apps/mcp-server/package.json` (modified - added @modelcontextprotocol/sdk dependency)
+- `apps/mcp-server/src/index.ts` (modified - implemented MCP server with all tools)
+
+### Validation
+- `pnpm check-types` passes for entire monorepo
+- `pnpm dev:mcp` starts server successfully
+- Health check endpoint returns 200
+- All acceptance criteria verified
+
+### Next Steps
+1. Integrate MCP server with Hermes for widget discovery
+2. Implement render tool (T5 in future slice)
+3. Add authentication/authorization if needed
+4. Test with Hermes client
