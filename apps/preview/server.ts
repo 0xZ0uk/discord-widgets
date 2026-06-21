@@ -79,7 +79,7 @@ app.get("/api/widgets", (c) => {
 	return c.json(widgets);
 });
 
-// API: render a widget and return hosted URL
+// API: render a widget and return file path
 app.get("/api/render/:name", async (c) => {
 	const name = c.req.param("name");
 

@@ -86,7 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 			},
 			{
 				name: "render",
-				description: "Render a widget with data and return a hosted image URL",
+				description: "Render a widget with data and return a local file path",
 				inputSchema: {
 					type: "object",
 					properties: {
@@ -374,9 +374,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 			const msg = err instanceof Error ? err.message : String(err);
 			const friendly = msg.includes("not found in registry")
 				? `Widget "${widgetName}" not found. Use the "list" tool to see available widgets.`
-				: msg.includes("R2 not configured")
-					? "Image hosting not configured. Set R2 environment variables or check packages/render/src/hosted.ts for local fallback."
-					: msg;
+				: msg;
 			return {
 				content: [
 					{

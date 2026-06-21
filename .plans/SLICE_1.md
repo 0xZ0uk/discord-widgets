@@ -159,3 +159,15 @@ All tasks in Slice 1 have been completed. The full render → upload → URL pip
 1. Create Cloudflare R2 bucket manually following `docs/R2_SETUP.md`.
 2. Set environment variables (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`).
 3. Re-run `pnpm demo` to verify full pipeline with R2 upload.
+
+### Simplification (Post-Completion)
+
+**R2/CDN removed.** The primary delivery flow uses `MEDIA:` attachments (local files uploaded directly to Discord). R2 was designed for webhook-based delivery which is now secondary. Changes:
+- Deleted `packages/render/src/upload.ts`
+- Removed `@aws-sdk/client-s3` and `@discord-widgets/env` from render package
+- `hosted.ts` simplified to render + save to `out/` directory
+- Removed R2 env vars from `packages/env/src/index.ts`
+- Cleaned up `.env.example`, demo script, MCP server error handling
+- Deleted `docs/R2_SETUP.md`
+
+Slice 1's original goal (render → upload → URL) is now **render → save locally → return path**.

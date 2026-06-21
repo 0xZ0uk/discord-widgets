@@ -8,3 +8,5 @@ dist/
 pnpm-lock.yaml
 .mimocode
 *.demo.png
+
+out/

@@ -15,4 +15,3 @@ export type { RenderWidgetResult } from "./render-widget.js";
 export { renderWidgetByName } from "./render-widget.js";
 export type { WidgetButton, WidgetEmbedOptions } from "./discord.js";
 export { sendWidgetEmbed } from "./discord.js";
-export { isR2Configured, uploadToR2 } from "./upload.js";
