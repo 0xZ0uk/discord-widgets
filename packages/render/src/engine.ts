@@ -1,5 +1,12 @@
 import { render } from "takumi-js";
 import type { ReactNode } from "react";
+import React from "react";
+
+// Ensure React is globally available for Takumi's JSX processing
+// (needed when tsx doesn't properly apply the react-jsx transform)
+if (typeof globalThis.React === "undefined") {
+	globalThis.React = React;
+}
 
 export interface RenderOptions {
 	width?: number;

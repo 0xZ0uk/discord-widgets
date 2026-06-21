@@ -1,0 +1,28 @@
+name: rss-feed
+description: "RSS feed widget displaying article cards with navigation"
+category: "content"
+component: "rss-feed"
+color: "#5865f2"
+fields:
+  - name: "Feed"
+    value: "Tech Blog"
+    inline: true
+  - name: "Article"
+    value: "Latest Post"
+    inline: false
+buttons:
+  - label: "Previous"
+    style: "secondary"
+    action:
+      type: "interaction"
+      handler: "navigate_prev"
+  - label: "Read Article"
+    style: "primary"
+    action:
+      type: "url"
+      url: "https://example.com"
+  - label: "Next"
+    style: "secondary"
+    action:
+      type: "interaction"
+      handler: "navigate_next"

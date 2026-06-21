@@ -1,0 +1,20 @@
+name: weather
+description: "Weather widget showing current conditions for a location"
+category: "utility"
+component: "weather"
+color: "#3498db"
+fields:
+  - name: "Location"
+    value: "Porto, Portugal"
+    inline: true
+  - name: "Temperature"
+    value: "22°"
+    inline: true
+  - name: "Condition"
+    value: "Partly Cloudy"
+buttons:
+  - label: "Detailed Forecast"
+    style: "primary"
+    action:
+      type: "url"
+      url: "https://weather.com"

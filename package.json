@@ -8,6 +8,7 @@
 		"build": "turbo build",
 		"check-types": "turbo check-types",
 		"dev:mcp": "turbo -F @discord-widgets/mcp-server dev",
+		"preview": "turbo -F @discord-widgets/preview dev",
 		"check": "biome check --write .",
 		"generate": "tsx scripts/generate-widget.ts",
 		"gen": "tsx scripts/generate-widget.ts"
