@@ -1,0 +1,25 @@
+name: crypto-prices
+description: "Cryptocurrency price tracker showing real-time market data"
+category: "finance"
+component: "crypto-prices"
+color: "#f7931a"
+fields:
+  - name: "Coin"
+    value: "Bitcoin"
+    inline: true
+  - name: "Symbol"
+    value: "BTC"
+    inline: true
+  - name: "Price"
+    value: "$67,432.10"
+  - name: "24h Change"
+    value: "+2.45%"
+  - name: "Source"
+    value: "CoinGecko"
+    inline: true
+buttons:
+  - label: "View on CoinGecko"
+    style: "link"
+    action:
+      type: "url"
+      url: "https://coingecko.com"

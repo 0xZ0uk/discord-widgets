@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { WeatherCard } from "./components/WeatherCard.js";
 import { RssFeedCard } from "./components/RssFeedCard.js";
+import { CryptoPrices } from "./components/CryptoPrices.js";
 
 /**
  * Registry mapping widget names (from catalog YAML) to their React components.
@@ -9,4 +10,5 @@ import { RssFeedCard } from "./components/RssFeedCard.js";
 export const widgetRegistry: Record<string, ComponentType<unknown>> = {
 	weather: WeatherCard as unknown as ComponentType<unknown>,
 	"rss-feed": RssFeedCard as unknown as ComponentType<unknown>,
+	"crypto-prices": CryptoPrices as unknown as ComponentType<unknown>,
 };

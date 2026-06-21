@@ -6,4 +6,6 @@ export { WeatherCard } from "./components/WeatherCard.js";
 export type { WeatherCardProps } from "./components/WeatherCard.js";
 export { RssFeedCard } from "./components/RssFeedCard.js";
 export type { RssFeedCardProps, RssFeedItem } from "./components/RssFeedCard.js";
+export { CryptoPrices } from "./components/CryptoPrices.js";
+export type { CryptoPricesProps } from "./components/CryptoPrices.js";
 export { widgetRegistry } from "./registry.js";

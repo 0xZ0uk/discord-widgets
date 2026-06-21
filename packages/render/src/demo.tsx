@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { env } from "@discord-widgets/env";
+import { CryptoPrices } from "./components/CryptoPrices.js";
 import { RssFeedCard } from "./components/RssFeedCard.js";
 import { WeatherCard } from "./components/WeatherCard.js";
 import { renderToPng } from "./engine.js";
@@ -114,9 +115,32 @@ async function renderRssFeedCards() {
 	}
 }
 
+async function renderCryptoPrices() {
+	console.log("🎨 Rendering CryptoPrices...");
+
+	const png = await renderToPng(
+		<CryptoPrices
+			coin="Bitcoin"
+			symbol="BTC"
+			price="$67,500"
+			change24h="+2.3%"
+			source="CoinGecko"
+			color="#f7931a"
+		/>,
+		{ width: 800, height: 400 },
+	);
+
+	const localPath = join(DEMO_DIR, "crypto-demo.png");
+	writeFileSync(localPath, png);
+	console.log(
+		`✅ CryptoPrices (${(png.length / 1024).toFixed(1)}KB) → ${localPath}`,
+	);
+}
+
 async function main() {
 	await renderWeatherCard();
 	await renderRssFeedCards();
+	await renderCryptoPrices();
 	console.log("\n🎉 Done!");
 }
 
