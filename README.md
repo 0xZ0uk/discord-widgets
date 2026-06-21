@@ -209,8 +209,8 @@ For dynamic values that can't be expressed as Tailwind classes (e.g., user-provi
   - [ ] Discord webhook delivery
   - [ ] Button interaction handler
 - [ ] **Phase 4: Polish**
-  - [ ] Widget preview UI (web app with Tailwind + shadcn)
-  - [ ] Template editor
+  - [x] Widget preview UI (web app with Tailwind + shadcn)
+  - [ ] Preview polish (category filtering, metadata display, render comparison)
   - [ ] Community templates
 
 ## Project Conventions

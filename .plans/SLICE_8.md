@@ -1,54 +1,43 @@
-# Slice 8: Template Editor + Polish
+# Slice 8: Widget Preview Polish
 
 ## Goal
 
-A web-based template editor for creating and editing widget templates visually, plus polish for the overall developer experience. This is the "make it easy" slice — lowering the barrier to creating new widgets.
+Polish the widget preview app (`apps/preview/`) into a proper development tool. No template editor — just a better previewer for iterating on widget designs.
 
 ## Issues
 
-### T1: Add template editor to preview app
+### T1: Add widget category filtering to preview
 
 **What to build:**
-Extend the preview app (`apps/preview/`) with a template editor:
-- Form to edit widget YAML fields (name, description, category, color)
-- Live preview that updates as fields change
-- Save button that writes back to the YAML file
-- Basic form validation (required fields, color picker)
+Add a category filter to the preview app. Show all categories as pills/chips, clicking one filters the widget dropdown. Show widget count per category.
 
-Use existing Tailwind + React setup. Keep it simple — no rich text editor, just form fields.
+Use the catalog's `category` field from YAML definitions.
 
 **Acceptance criteria:**
-- [ ] Editor shows current widget metadata in a form
-- [ ] Editing fields updates the preview in real-time
-- [ ] Save writes changes to the YAML file
-- [ ] Validation prevents saving invalid data
-- [ ] Editor is accessible from the preview app UI
+- [ ] Category pills displayed above widget dropdown
+- [ ] Clicking a category filters the dropdown
+- [ ] "All" option shows every widget
+- [ ] Widget count shown per category
 
-**Dependencies:** Slice 2 (third widget to have something to edit)
+**Dependencies:** Slice 2 (third widget needed for filtering to be useful)
 
 **Metadata:**
-- **Source:** PRD Phase 4 (Template editor)
+- **Source:** PRD Phase 4 (Polish)
 - **Workspace:** dir:/root/discord-widgets
 - **Assignee:** z0uk
 
 ---
 
-### T2: Improve codegen script with interactive prompts
+### T2: Show widget metadata in preview
 
 **What to build:**
-Update `scripts/generate-widget.ts` to be interactive:
-- Prompt for widget name (with validation)
-- Prompt for category (with suggestions)
-- Prompt for primary color (with default)
-- Show summary before creating
-
-Use readline for simple terminal prompts. Keep it lightweight — no inquirer dependency.
+Display widget metadata below the Discord buttons: name, description, category, available fields, and the YAML source. Help developers understand what data the widget expects.
 
 **Acceptance criteria:**
-- [ ] `pnpm generate` prompts for name, category, color
-- [ ] Invalid input shows clear error and re-prompts
-- [ ] Summary shown before file creation
-- [ ] `--yes` flag skips prompts (for CI/automation)
+- [ ] Widget name and description shown
+- [ ] Available fields listed with types
+- [ ] Buttons from catalog shown (label, style, action type)
+- [ ] Collapsible YAML source view
 
 **Dependencies:** None
 
@@ -59,22 +48,24 @@ Use readline for simple terminal prompts. Keep it lightweight — no inquirer de
 
 ---
 
-### T3: Add widget categories and filtering
+### T3: Improve codegen with interactive prompts
 
 **What to build:**
-Enhance the catalog and preview app with proper category support:
-- Define categories: `weather`, `content`, `finance`, `social`, `utility`
-- Preview app filters widgets by category
-- MCP `list` tool supports category filtering
-- Codegen suggests categories during creation
+Update `scripts/generate-widget.ts` to be interactive:
+- Prompt for name (with kebab-case validation)
+- Prompt for category (suggest existing: weather, content, finance, social, utility)
+- Prompt for primary color (default: #5865f2)
+- Show summary before creating
+
+Use readline — no new dependencies. Add `--yes` flag to skip prompts for CI.
 
 **Acceptance criteria:**
-- [ ] Categories defined in a shared constant
-- [ ] Preview app has category dropdown/filter
-- [ ] MCP `list` tool filters by category
-- [ ] Codegen suggests existing categories
+- [ ] `pnpm generate` prompts for name, category, color
+- [ ] Invalid input re-prompts with clear error
+- [ ] Summary shown before file creation
+- [ ] `--yes` flag skips all prompts
 
-**Dependencies:** Slice 2 (multiple widgets needed to make filtering useful)
+**Dependencies:** None
 
 **Metadata:**
 - **Source:** PRD Phase 4
@@ -83,24 +74,18 @@ Enhance the catalog and preview app with proper category support:
 
 ---
 
-### T4: Update README with complete documentation
+### T4: Add widget render comparison view
 
 **What to build:**
-Update README.md to reflect the complete system:
-- Architecture diagram (updated with all components)
-- Quick start guide (install, run preview, create widget)
-- Widget development guide (codegen, preview, register)
-- MCP server guide (start, test tools)
-- Deployment guide (R2 setup, Discord bot setup)
-- Contributing guide
+Show the same widget rendered at different sizes (800×400, 800×480, 1200×630) side-by-side. Helps developers verify their widget looks good at common Discord embed dimensions.
 
 **Acceptance criteria:**
-- [ ] README covers all components
-- [ ] Quick start works end-to-end
-- [ ] All commands are documented
-- [ ] Troubleshooting section included
+- [ ] Three render sizes shown side-by-side
+- [ ] Each size renders independently
+- [ ] Layout adjusts responsively
+- [ ] Click a size to set it as the primary preview
 
-**Dependencies:** All previous slices
+**Dependencies:** None
 
 **Metadata:**
 - **Source:** PRD Phase 4

@@ -35,7 +35,7 @@ A monorepo system with four layers:
 - Hermes widget matching skill
 - Discord webhook delivery
 - Button interaction handler ( Previous/Next/Link)
-- Template editor UI
+- Preview app polish (category filtering, metadata display, render comparison)
 - Community template system
 
 ## User Stories
@@ -95,6 +95,7 @@ A monorepo system with four layers:
 ## Out of Scope
 
 - Full dashboard/admin UI (only a simple preview app)
+- Widget template editor (preview polish only, no editing)
 - Widget analytics (views, clicks)
 - Multi-language widget support
 - Widget versioning/rollbacks
