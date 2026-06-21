@@ -1,13 +1,14 @@
 import { createServer } from "node:http";
 import { getWidget, loadWidgets } from "@discord-widgets/catalog";
-import { renderWidgetByName } from "@discord-widgets/render";
+import { env } from "@discord-widgets/env";
+import { renderWidgetByName, sendWidgetEmbed } from "@discord-widgets/render";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
 	CallToolRequestSchema,
+	InitializedNotificationSchema,
 	ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { InitializedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { Hono } from "hono";
 
 const PORT = Number.parseInt(process.env.PORT ?? "3000", 10);
@@ -85,8 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 			},
 			{
 				name: "render",
-				description:
-					"Render a widget with data and return a hosted image URL",
+				description: "Render a widget with data and return a hosted image URL",
 				inputSchema: {
 					type: "object",
 					properties: {
@@ -106,6 +106,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 						height: {
 							type: "number",
 							description: "Image height in pixels (default: 400)",
+						},
+						deliver: {
+							type: "boolean",
+							description:
+								"Send the rendered widget to Discord via webhook",
+						},
+						webhookUrl: {
+							type: "string",
+							description:
+								"Override webhook URL (defaults to DISCORD_WIDGET_WEBHOOK_URL env var)",
 						},
 					},
 					required: ["name", "data"],
@@ -271,11 +281,92 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 				width,
 				height,
 			});
+
+			const deliver = args?.deliver as boolean | undefined;
+			const webhookUrl =
+				(args?.webhookUrl as string | undefined) ??
+				env.DISCORD_WIDGET_WEBHOOK_URL;
+
+			if (deliver) {
+				if (!webhookUrl) {
+					return {
+						content: [
+							{
+								type: "text",
+								text: JSON.stringify({
+									url: result.url,
+									width: result.width,
+									height: result.height,
+									delivered: false,
+									warning:
+										"No webhook URL configured. Set DISCORD_WIDGET_WEBHOOK_URL or pass webhookUrl.",
+								}),
+							},
+						],
+					};
+				}
+
+				try {
+					const widget = getWidget(widgetName);
+					const buttons = widget?.buttons?.map((btn) => ({
+						label: btn.label,
+						style:
+							btn.action?.type === "url"
+								? ("link" as const)
+								: ("secondary" as const),
+						url: btn.action?.type === "url" ? btn.action.url : undefined,
+					}));
+
+					await sendWidgetEmbed(webhookUrl, {
+						imageUrl: result.url,
+						title: widget?.name ?? widgetName,
+						color: widget?.color,
+						buttons,
+					});
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: JSON.stringify({
+									url: result.url,
+									width: result.width,
+									height: result.height,
+									delivered: true,
+								}),
+							},
+						],
+					};
+				} catch (deliverErr) {
+					const msg =
+						deliverErr instanceof Error
+							? deliverErr.message
+							: String(deliverErr);
+					return {
+						content: [
+							{
+								type: "text",
+								text: JSON.stringify({
+									url: result.url,
+									width: result.width,
+									height: result.height,
+									delivered: false,
+									warning: `Discord delivery failed: ${msg}`,
+								}),
+							},
+						],
+					};
+				}
+			}
+
 			return {
 				content: [
 					{
 						type: "text",
-						text: JSON.stringify(result, null, 2),
+						text: JSON.stringify({
+							...result,
+							delivered: false,
+						}),
 					},
 				],
 			};

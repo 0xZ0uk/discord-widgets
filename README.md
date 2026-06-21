@@ -86,6 +86,31 @@ pnpm check-types
 pnpm check
 ```
 
+## Discord Setup
+
+### Creating a Webhook
+
+1. Open Discord and go to the channel where you want widgets posted
+2. Click the gear icon (Edit Channel) → **Integrations** → **Webhooks**
+3. Click **New Webhook**, give it a name (e.g., "Widget Bot")
+4. Copy the webhook URL
+5. Add to your `.env`:
+   ```
+   DISCORD_WIDGET_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL
+   ```
+
+### Bot Token (Optional)
+
+For button interactions (Slice 7), create a Discord bot:
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application → **Bot** → Add Bot
+3. Enable **Message Content Intent** under Privileged Gateway Intents
+4. Copy the token and add to your `.env`:
+   ```
+   DISCORD_BOT_TOKEN=your_bot_token
+   ```
+
 ## Creating a Widget
 
 ### 1. Define the Component

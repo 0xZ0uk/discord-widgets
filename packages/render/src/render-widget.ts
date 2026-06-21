@@ -21,10 +21,10 @@ export async function renderWidgetByName(
 	const width = options.width ?? 800;
 	const height = options.height ?? 400;
 
-	const url = await renderToHostedUrl(
-		React.createElement(Component, data),
-		{ width, height },
-	);
+	const url = await renderToHostedUrl(React.createElement(Component, data), {
+		width,
+		height,
+	});
 
 	return { url, width, height };
 }

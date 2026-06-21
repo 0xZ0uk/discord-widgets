@@ -12,6 +12,8 @@ export const env = createEnv({
 		R2_SECRET_ACCESS_KEY: z.string().optional(),
 		R2_BUCKET_NAME: z.string().optional(),
 		R2_PUBLIC_URL: z.url().optional(),
+		DISCORD_WIDGET_WEBHOOK_URL: z.string().optional(),
+		DISCORD_BOT_TOKEN: z.string().optional(),
 	},
 	runtimeEnv: process.env,
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
