@@ -12,7 +12,16 @@ export function deriveProps(widget: Widget | null): Record<string, unknown> {
 	if (!widget?.fields) return {};
 	const p: Record<string, unknown> = {};
 	for (const f of widget.fields) {
-		p[f.name] = f.value;
+		const key = f.prop ?? f.name;
+		const parts = key.split(".");
+		let obj = p;
+		for (let i = 0; i < parts.length - 1; i++) {
+			if (typeof obj[parts[i]] !== "object" || obj[parts[i]] === null) {
+				obj[parts[i]] = {};
+			}
+			obj = obj[parts[i]] as Record<string, unknown>;
+		}
+		obj[parts[parts.length - 1]] = f.value;
 	}
 	return p;
 }

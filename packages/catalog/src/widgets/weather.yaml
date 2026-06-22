@@ -5,12 +5,15 @@ component: "weather"
 color: "#3498db"
 fields:
   - name: "Location"
+    prop: "location"
     value: "Porto, Portugal"
     inline: true
   - name: "Temperature"
+    prop: "temp"
     value: "22°"
     inline: true
   - name: "Condition"
+    prop: "condition"
     value: "Partly Cloudy"
 buttons:
   - label: "Detailed Forecast"

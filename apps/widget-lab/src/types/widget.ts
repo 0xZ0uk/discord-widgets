@@ -4,10 +4,22 @@ export interface Widget {
 	category?: string;
 	component?: string;
 	color?: string;
-	fields?: Array<{ name: string; value: string; inline?: boolean }>;
+	fields?: Array<{
+		name: string;
+		value: string;
+		prop?: string;
+		inline?: boolean;
+	}>;
 	buttons?: Array<{
 		label: string;
-		style?: string;
+		style?:
+			| "default"
+			| "link"
+			| "destructive"
+			| "outline"
+			| "secondary"
+			| "ghost"
+			| undefined;
 		action?: { type: string; url?: string; handler?: string };
 	}>;
 }

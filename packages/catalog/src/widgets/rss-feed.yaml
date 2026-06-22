@@ -5,9 +5,11 @@ component: "rss-feed"
 color: "#5865f2"
 fields:
   - name: "Feed"
+    prop: "item.source"
     value: "Tech Blog"
     inline: true
   - name: "Article"
+    prop: "item.title"
     value: "Latest Post"
     inline: false
 buttons:

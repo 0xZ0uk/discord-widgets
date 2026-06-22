@@ -8,7 +8,9 @@ export function Header() {
 				<SidebarTrigger />
 			</div>
 			<div className="flex w-full basis-10/12 items-center justify-center">
-				<p className="text-primary text-sm">No Selected Widget</p>
+				<p className="font-medium text-muted-foreground text-xs uppercase">
+					Widget Lab
+				</p>
 			</div>
 			<div className="flex w-full basis-1/12 justify-end">
 				<Button variant="outline" size="sm">

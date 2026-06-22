@@ -11,6 +11,7 @@ export const WidgetSchema = z.object({
 			z.object({
 				name: z.string(),
 				value: z.string(),
+				prop: z.string().optional(),
 				inline: z.boolean().optional(),
 			}),
 		)

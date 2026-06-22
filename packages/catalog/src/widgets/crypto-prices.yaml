@@ -5,16 +5,21 @@ component: "crypto-prices"
 color: "#f7931a"
 fields:
   - name: "Coin"
+    prop: "coin"
     value: "Bitcoin"
     inline: true
   - name: "Symbol"
+    prop: "symbol"
     value: "BTC"
     inline: true
   - name: "Price"
+    prop: "price"
     value: "$67,432.10"
   - name: "24h Change"
+    prop: "change24h"
     value: "+2.45%"
   - name: "Source"
+    prop: "source"
     value: "CoinGecko"
     inline: true
 buttons:
