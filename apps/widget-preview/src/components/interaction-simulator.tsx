@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Widget } from "#/types/widget";
+import { styleToVariant } from "#/lib/widget";
 import { Button } from "./ui/button";
 
 interface InteractionSimulatorProps {
@@ -56,7 +57,7 @@ export function InteractionSimulator({
 					<Button
 						key={button.label}
 						type="button"
-						variant={button.style}
+						variant={styleToVariant(button.style)}
 						onClick={() => handleClick(button)}
 						className={"cursor-pointer font-medium text-sm transition-colors"}
 					>
@@ -86,7 +87,7 @@ export function InteractionSimulator({
 					</div>
 
 					<div className="max-h-48 space-y-1 overflow-y-auto">
-						{history.reverse().map((entry, i) => (
+						{[...history].reverse().map((entry, i) => (
 							<div
 								key={entry.timestamp}
 								className="flex items-center justify-between rounded-lg bg-[#1e1f22] px-3 py-2 text-sm"

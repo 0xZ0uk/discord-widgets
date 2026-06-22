@@ -8,6 +8,20 @@ export function formatRenderTime(ms: number): string {
 	return `${ms.toFixed(1)} ms`;
 }
 
+/** Map Discord button style names to shadcn Button variant names. */
+export function styleToVariant(
+	style: string | undefined,
+): "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" {
+	const map: Record<string, "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"> = {
+		primary: "default",
+		secondary: "secondary",
+		link: "link",
+		danger: "destructive",
+		success: "default",
+	};
+	return map[style ?? ""] ?? "default";
+}
+
 export function deriveProps(widget: Widget | null): Record<string, unknown> {
 	if (!widget?.fields) return {};
 	const p: Record<string, unknown> = {};

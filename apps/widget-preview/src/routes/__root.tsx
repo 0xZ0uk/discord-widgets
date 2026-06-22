@@ -1,6 +1,4 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AppSidebar } from "#/components/app-sidebar";
 import { Header } from "#/components/header";
 import { ThemeProvider } from "#/components/theme-provider";
@@ -8,6 +6,10 @@ import { SidebarProvider } from "#/components/ui/sidebar";
 import { Toaster } from "#/components/ui/sonner";
 import { TooltipProvider } from "#/components/ui/tooltip";
 import appCss from "../styles.css?url";
+
+const { TanStackDevtools, TanStackRouterDevtoolsPanel } = import.meta.hot
+	? await import("@tanstack/react-devtools")
+	: { TanStackDevtools: null, TanStackRouterDevtoolsPanel: null };
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -20,7 +22,7 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Discord Widgets — Widget Lab",
 			},
 		],
 		links: [
@@ -52,17 +54,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						</SidebarProvider>
 					</TooltipProvider>
 				</ThemeProvider>
-				<TanStackDevtools
-					config={{
-						position: "bottom-right",
-					}}
-					plugins={[
-						{
-							name: "Tanstack Router",
-							render: <TanStackRouterDevtoolsPanel />,
-						},
-					]}
-				/>
+				{TanStackDevtools && (
+					<TanStackDevtools
+						config={{
+							position: "bottom-right",
+						}}
+						plugins={[
+							{
+								name: "Tanstack Router",
+								render: <TanStackRouterDevtoolsPanel />,
+							},
+						]}
+					/>
+				)}
 				<Scripts />
 			</body>
 		</html>

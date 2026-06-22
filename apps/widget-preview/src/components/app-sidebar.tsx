@@ -83,7 +83,6 @@ export function AppSidebar() {
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
-				<SidebarGroup />
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>

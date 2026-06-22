@@ -1,6 +1,4 @@
-import { RefreshCcw } from "lucide-react";
 import { SidebarTrigger } from "#/components/ui/sidebar";
-import { Button } from "./ui/button";
 
 export function Header() {
 	return (
@@ -12,11 +10,6 @@ export function Header() {
 				<p className="font-medium text-muted-foreground text-xs uppercase">
 					Widget Lab
 				</p>
-			</div>
-			<div className="flex w-full basis-1/12 justify-end">
-				<Button variant="outline" size="sm">
-					<RefreshCcw /> Refresh
-				</Button>
 			</div>
 		</header>
 	);
