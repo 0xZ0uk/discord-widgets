@@ -1,3 +1,4 @@
+import { RefreshCcw } from "lucide-react";
 import { SidebarTrigger } from "#/components/ui/sidebar";
 import { Button } from "./ui/button";
 
@@ -14,7 +15,7 @@ export function Header() {
 			</div>
 			<div className="flex w-full basis-1/12 justify-end">
 				<Button variant="outline" size="sm">
-					Action
+					<RefreshCcw /> Refresh
 				</Button>
 			</div>
 		</header>

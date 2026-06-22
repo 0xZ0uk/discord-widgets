@@ -16,7 +16,7 @@ export const WeatherCard: FunctionComponent<WeatherCardProps> = ({
 	color = "#3498db",
 }) => {
 	return (
-		<div tw="w-[800px] h-[400px] bg-[linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)] rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden">
+		<div tw="w-[800px] h-[400px] bg-zinc-900 rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden">
 			{/* Accent bar */}
 			<div
 				tw="absolute top-0 left-0 right-0 h-1"

@@ -1,5 +1,5 @@
 {
-  "name": "widget-lab",
+  "name": "@discord-widgets/widget-preview",
   "private": true,
   "type": "module",
   "imports": {

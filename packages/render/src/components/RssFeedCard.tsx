@@ -26,7 +26,7 @@ export const RssFeedCard: FunctionComponent<RssFeedCardProps> = ({
 	const sourceLine = `${item.source ?? "Feed"}${item.date ? ` • ${item.date}` : ""}`;
 
 	return (
-		<div tw="w-[800px] h-[480px] bg-[linear-gradient(135deg,#0f0f23,#1a1a2e,#16213e)] rounded-3xl flex flex-col font-sans text-white overflow-hidden">
+		<div tw="w-[800px] h-[480px] bg-zinc-900  rounded-3xl flex flex-col font-sans text-white overflow-hidden">
 			{/* Accent bar */}
 			<div tw="h-1" style={{ background: color }} />
 

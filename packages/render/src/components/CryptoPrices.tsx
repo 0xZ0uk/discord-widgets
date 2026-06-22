@@ -21,7 +21,7 @@ export const CryptoPrices: FunctionComponent<CryptoPricesProps> = ({
 	const changeColor = isPositive ? "#00d97e" : "#e63946";
 
 	return (
-		<div tw="w-[800px] h-[400px] bg-[linear-gradient(135deg,#0f0f23,#1a1a2e,#16213e)] rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden">
+		<div tw="w-[800px] h-[400px] bg-zinc-900 rounded-3xl p-12 flex flex-col justify-between font-sans text-white relative overflow-hidden">
 			{/* Accent bar */}
 			<div
 				tw="absolute top-0 left-0 right-0 h-1"
@@ -31,7 +31,7 @@ export const CryptoPrices: FunctionComponent<CryptoPricesProps> = ({
 			{/* Header */}
 			<div tw="flex justify-between items-start">
 				<div tw="flex flex-col">
-					<div tw="text-sm opacity-60 mb-1">CRYPTO</div>
+					<div tw="text-sm opacity-60 mb-1 uppercase">Price Tracker</div>
 					<div tw="text-[32px] font-bold">
 						{coin}
 						<span tw="text-lg opacity-50 ml-3">({symbol})</span>
@@ -53,7 +53,6 @@ export const CryptoPrices: FunctionComponent<CryptoPricesProps> = ({
 			{/* Footer */}
 			<div tw="flex justify-between items-center text-sm opacity-40">
 				<div>Source: {source}</div>
-				<div>Discord Widgets</div>
 			</div>
 		</div>
 	);
