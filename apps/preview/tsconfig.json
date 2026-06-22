@@ -3,7 +3,11 @@
 	"compilerOptions": {
 		"jsx": "react-jsx",
 		"outDir": "./dist",
-		"lib": ["ESNext", "DOM"]
+		"lib": ["ESNext", "DOM"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
 	},
 	"include": ["src/**/*.ts", "src/**/*.tsx", "server.ts"]
 }
