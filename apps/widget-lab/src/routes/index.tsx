@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo } from "react";
+import { EmbedTester } from "#/components/embed-tester";
+import { ExportPanel } from "#/components/export-panel";
 import { InteractionSimulator } from "#/components/interaction-simulator";
+import { PropsEditor } from "#/components/props-editor";
+import { RenderMetaDetails } from "#/components/render-meta-details";
 import { RenderPreview } from "#/components/render-preview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { type Tab, useWidgetStore } from "#/hooks/use-widget-store";
@@ -18,6 +22,9 @@ function Home() {
 		meta,
 		loading,
 		error,
+		props,
+		embedDirective,
+		apiPayload,
 		setTab,
 		setWidgets,
 		setSelected,
@@ -125,33 +132,17 @@ function Home() {
 		<div className="flex h-[calc(100vh-3rem)] w-full flex-col">
 			<div className="flex min-h-0 w-full flex-2 items-center justify-center border-border border-b">
 				<div className="flex h-full basis-3/4 items-center justify-center">
-					<RenderPreview
-						imageUrl={imageUrl}
-						meta={meta}
-						loading={loading}
-						error={error}
-					/>
+					<RenderPreview imageUrl={imageUrl} loading={loading} error={error} />
 				</div>
 				<div className="h-full basis-1/4 border-border border-l bg-card">
-					<div className="flex w-full flex-col border-b p-4">
-						<div className="flex items-center justify-between">
-							<p className="text-muted-foreground text-xs">Dimensions</p>
-							<p className="text-foreground text-sm">800 × 400</p>
-						</div>
-						<div className="flex items-center justify-between">
-							<p className="text-muted-foreground text-xs">File size</p>
-							<p className="text-foreground text-sm">21.3 KB</p>
-						</div>
-						<div className="flex items-center justify-between">
-							<p className="text-muted-foreground text-xs">Render time</p>
-							<p className="text-foreground text-sm">28.2 ms</p>
-						</div>
-					</div>
-					<div className="flex w-full flex-col p-4">
-						<p className="font-medium text-muted-foreground text-xs uppercase">
-							Properties
-						</p>
-					</div>
+					<RenderMetaDetails meta={meta} loading={loading} />
+					<PropsEditor
+						widget={currentWidget}
+						props={props}
+						onPropsChange={setProps}
+						onRender={() => fetchRender(props)}
+						loading={loading}
+					/>
 				</div>
 			</div>
 			<div className="min-h-0 flex-1 bg-card p-4">
@@ -170,8 +161,21 @@ function Home() {
 					<TabsContent value="interaction">
 						<InteractionSimulator widget={currentWidget} />
 					</TabsContent>
-					<TabsContent value="embed">Change your password here.</TabsContent>
-					<TabsContent value="export">Change your password here.</TabsContent>
+					<TabsContent value="embed">
+						<EmbedTester
+							widget={currentWidget}
+							imageUrl={imageUrl}
+							onEmbedDirectiveChange={handleEmbedChange}
+						/>
+					</TabsContent>
+					<TabsContent value="export">
+						<ExportPanel
+							imageUrl={imageUrl}
+							meta={meta}
+							embedDirective={embedDirective}
+							apiPayload={apiPayload}
+						/>
+					</TabsContent>
 				</Tabs>
 			</div>
 		</div>

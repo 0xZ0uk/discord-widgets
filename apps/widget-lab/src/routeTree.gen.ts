@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OutSplatRouteImport } from './routes/out.$'
+import { Route as ApiWidgetsRouteImport } from './routes/api/widgets'
+import { Route as ApiRenderNameRouteImport } from './routes/api/render.$name'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OutSplatRoute = OutSplatRouteImport.update({
+  id: '/out/$',
+  path: '/out/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWidgetsRoute = ApiWidgetsRouteImport.update({
+  id: '/api/widgets',
+  path: '/api/widgets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRenderNameRoute = ApiRenderNameRouteImport.update({
+  id: '/api/render/$name',
+  path: '/api/render/$name',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/widgets': typeof ApiWidgetsRoute
+  '/out/$': typeof OutSplatRoute
+  '/api/render/$name': typeof ApiRenderNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/widgets': typeof ApiWidgetsRoute
+  '/out/$': typeof OutSplatRoute
+  '/api/render/$name': typeof ApiRenderNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/widgets': typeof ApiWidgetsRoute
+  '/out/$': typeof OutSplatRoute
+  '/api/render/$name': typeof ApiRenderNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/widgets' | '/out/$' | '/api/render/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/widgets' | '/out/$' | '/api/render/$name'
+  id: '__root__' | '/' | '/api/widgets' | '/out/$' | '/api/render/$name'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiWidgetsRoute: typeof ApiWidgetsRoute
+  OutSplatRoute: typeof OutSplatRoute
+  ApiRenderNameRoute: typeof ApiRenderNameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/out/$': {
+      id: '/out/$'
+      path: '/out/$'
+      fullPath: '/out/$'
+      preLoaderRoute: typeof OutSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/widgets': {
+      id: '/api/widgets'
+      path: '/api/widgets'
+      fullPath: '/api/widgets'
+      preLoaderRoute: typeof ApiWidgetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/render/$name': {
+      id: '/api/render/$name'
+      path: '/api/render/$name'
+      fullPath: '/api/render/$name'
+      preLoaderRoute: typeof ApiRenderNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiWidgetsRoute: ApiWidgetsRoute,
+  OutSplatRoute: OutSplatRoute,
+  ApiRenderNameRoute: ApiRenderNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
