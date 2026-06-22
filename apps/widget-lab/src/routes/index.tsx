@@ -1,30 +1,136 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { InteractionSimulator } from "#/components/interaction-simulator";
 import { RenderPreview } from "#/components/render-preview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
+import { type Tab, useWidgetStore } from "#/hooks/use-widget-store";
+import { deriveProps } from "#/lib/widget";
 import type { RenderMeta, Widget } from "#/types/widget";
-
-type Tab = "interaction" | "embed" | "export";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-	const [widgets, setWidgets] = useState<Widget[]>([]);
-	const [selected, setSelected] = useState("");
-	const [props, setProps] = useState<Record<string, unknown>>({});
-	const [imageUrl, setImageUrl] = useState("");
-	const [meta, setMeta] = useState<RenderMeta | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState("");
-	const [embedDirective, setEmbedDirective] = useState("");
-	const [apiPayload, setApiPayload] = useState("");
-	const [tab, setTab] = useState<Tab>("interaction");
+	const {
+		widgets,
+		selected,
+		tab,
+		imageUrl,
+		meta,
+		loading,
+		error,
+		setTab,
+		setWidgets,
+		setSelected,
+		setError,
+		setProps,
+		setLoading,
+		setImageUrl,
+		setMeta,
+		setEmbedDirective,
+		setApiPayload,
+	} = useWidgetStore();
+
+	// Fetch widget list on mount
+	useEffect(() => {
+		fetch("/api/widgets")
+			.then((r) => r.json())
+			.then((data: unknown) => {
+				const w = data as Widget[];
+				setWidgets(w);
+				if (w.length > 0) setSelected(w[0]?.name ?? "");
+			})
+			.catch((err) => setError(`Failed to load widgets: ${err.message}`));
+	}, [setError, setSelected, setWidgets]);
+
+	const currentWidget = useMemo(
+		() => widgets.find((w) => w.name === selected) ?? null,
+		[widgets, selected],
+	);
+
+	// Reset props when selection changes
+	useEffect(() => {
+		setProps(deriveProps(currentWidget));
+	}, [currentWidget, setProps]);
+
+	const fetchRender = useCallback(
+		async (customProps?: Record<string, unknown>) => {
+			const name = selected;
+			if (!name) return;
+
+			setLoading(true);
+			setError("");
+
+			try {
+				const url = `/api/render/${name}`;
+				const options: RequestInit = customProps
+					? {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ props: customProps }),
+						}
+					: {};
+
+				const res = await fetch(url, options);
+				if (!res.ok) {
+					const body = (await res.json()) as { error?: string };
+					throw new Error(body.error ?? `HTTP ${res.status}`);
+				}
+				const result = (await res.json()) as RenderMeta;
+				setImageUrl(result.url);
+				setMeta(result);
+			} catch (err) {
+				setError(
+					`Render failed: ${err instanceof Error ? err.message : String(err)}`,
+				);
+				setImageUrl("");
+				setMeta(null);
+			} finally {
+				setLoading(false);
+			}
+		},
+		[selected, setError, setImageUrl, setLoading, setMeta],
+	);
+
+	// Auto-render when selected changes
+	useEffect(() => {
+		fetchRender();
+	}, [fetchRender]);
+
+	const handleSelect = useCallback(
+		(name: string) => {
+			setSelected(name);
+			setImageUrl("");
+			setMeta(null);
+			setEmbedDirective("");
+			setApiPayload("");
+		},
+		[setApiPayload, setEmbedDirective, setImageUrl, setMeta, setSelected],
+	);
+
+	const handleEmbedChange = useCallback(
+		(directive: string, payload: string) => {
+			setEmbedDirective(directive);
+			setApiPayload(payload);
+		},
+		[setEmbedDirective, setApiPayload],
+	);
+
+	const tabs: { key: Tab; label: string }[] = [
+		{ key: "interaction", label: "Interaction Simulator" },
+		{ key: "embed", label: "Embed Tester" },
+		{ key: "export", label: "Export" },
+	];
 
 	return (
 		<div className="flex h-[calc(100vh-3rem)] w-full flex-col">
 			<div className="flex min-h-0 w-full flex-2 items-center justify-center border-border border-b">
 				<div className="flex h-full basis-3/4 items-center justify-center">
-					<RenderPreview />
+					<RenderPreview
+						imageUrl={imageUrl}
+						meta={meta}
+						loading={loading}
+						error={error}
+					/>
 				</div>
 				<div className="h-full basis-1/4 border-border border-l bg-card">
 					<div className="flex w-full flex-col border-b p-4">
@@ -49,14 +155,20 @@ function Home() {
 				</div>
 			</div>
 			<div className="min-h-0 flex-1 bg-card p-4">
-				<Tabs defaultValue="account" className="w-full">
+				<Tabs
+					value={tab}
+					onValueChange={(v) => setTab(v as Tab)}
+					className="w-full"
+				>
 					<TabsList>
-						<TabsTrigger value="interaction">Interaction Simulator</TabsTrigger>
-						<TabsTrigger value="embed">Embed Tester</TabsTrigger>
-						<TabsTrigger value="export">Export</TabsTrigger>
+						{tabs.map((t) => (
+							<TabsTrigger value={t.key} key={t.key}>
+								{t.label}
+							</TabsTrigger>
+						))}
 					</TabsList>
 					<TabsContent value="interaction">
-						Make changes to your account here.
+						<InteractionSimulator widget={currentWidget} />
 					</TabsContent>
 					<TabsContent value="embed">Change your password here.</TabsContent>
 					<TabsContent value="export">Change your password here.</TabsContent>
