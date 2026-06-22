@@ -1,19 +1,43 @@
 {
-	"name": "@discord-widgets/env",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"dependencies": {
-		"@t3-oss/env-core": "^0.13.1",
-		"dotenv": "catalog:",
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@discord-widgets/config": "workspace:*",
-		"@types/node": "catalog:",
-		"typescript": "catalog:"
-	}
+  "name": "@discord-widgets/env",
+  "version": "1.0.0",
+  "description": "Environment variable validation for Discord Widgets",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.1",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@discord-widgets/config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsup": "^8.5.1",
+    "typescript": "catalog:"
+  },
+  "keywords": [
+    "discord",
+    "widgets",
+    "env"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xZ0uk/discord-widgets.git",
+    "directory": "packages/env"
+  }
 }

@@ -1,24 +1,60 @@
 {
-	"name": "@discord-widgets/render",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts",
-		"./components/*": "./src/components/*.tsx"
-	},
-	"scripts": {
-		"demo": "tsx src/demo.tsx",
-		"check-types": "tsc --noEmit"
-	},
-	"dependencies": {
-		"react": "catalog:",
-		"takumi-js": "^1.8.7"
-	},
-	"devDependencies": {
-		"@discord-widgets/config": "workspace:*",
-		"@types/react": "catalog:",
-		"tsx": "^4.19.2",
-		"typescript": "catalog:"
-	}
+  "name": "@discord-widgets/render",
+  "version": "1.0.0",
+  "description": "Render Discord widget cards as PNG images using Takumi (Rust-powered JSX renderer)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli": {
+      "import": "./dist/cli.js"
+    },
+    "./components/*": {
+      "import": "./dist/components/*.js",
+      "types": "./dist/components/*.d.ts"
+    }
+  },
+  "bin": {
+    "discord-widgets": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "demo": "tsx src/demo.tsx",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "takumi-js": "^1.8.7"
+  },
+  "devDependencies": {
+    "@discord-widgets/config": "workspace:*",
+    "@types/react": "catalog:",
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.2",
+    "typescript": "catalog:"
+  },
+  "keywords": [
+    "discord",
+    "widgets",
+    "render",
+    "png",
+    "takumi",
+    "react",
+    "weather",
+    "crypto",
+    "rss"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xZ0uk/discord-widgets.git",
+    "directory": "packages/render"
+  }
 }

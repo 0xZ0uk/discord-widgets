@@ -1,6 +1,6 @@
 {
-	"extends": "@discord-widgets/config/tsconfig.base.json",
-	"compilerOptions": {
-		"jsx": "react-jsx"
-	}
+  "extends": "@discord-widgets/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
 }

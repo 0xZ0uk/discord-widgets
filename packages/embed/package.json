@@ -1,18 +1,40 @@
 {
-	"name": "@discord-widgets/embed",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"scripts": {
-		"test": "vitest run",
-		"check-types": "tsc --noEmit"
-	},
-	"devDependencies": {
-		"@discord-widgets/config": "workspace:*",
-		"typescript": "catalog:",
-		"vitest": "^3.2.1"
-	}
+  "name": "@discord-widgets/embed",
+  "version": "1.0.0",
+  "description": "Parse and build Discord embed directives for widget delivery",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@discord-widgets/config": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "catalog:",
+    "vitest": "^3.2.1"
+  },
+  "keywords": [
+    "discord",
+    "embed",
+    "widgets",
+    "parser"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xZ0uk/discord-widgets.git",
+    "directory": "packages/embed"
+  }
 }

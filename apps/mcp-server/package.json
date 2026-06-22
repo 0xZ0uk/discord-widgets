@@ -1,27 +1,52 @@
 {
-	"name": "@discord-widgets/mcp-server",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"main": "src/index.ts",
-	"scripts": {
-		"dev": "tsx watch src/index.ts",
-		"build": "tsdown",
-		"check-types": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@discord-widgets/render": "workspace:*",
-		"@discord-widgets/catalog": "workspace:*",
-		"@discord-widgets/ui": "workspace:*",
-		"@modelcontextprotocol/sdk": "^1.12.1",
-		"hono": "catalog:",
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@discord-widgets/config": "workspace:*",
-		"@types/node": "catalog:",
-		"tsx": "^4.19.0",
-		"tsdown": "^0.11.0",
-		"typescript": "catalog:"
-	}
+  "name": "@discord-widgets/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Discord Widgets — render widget PNGs via tool calls",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "discord-widgets-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@discord-widgets/catalog": "workspace:*",
+    "@discord-widgets/render": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@discord-widgets/config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.0",
+    "typescript": "catalog:"
+  },
+  "keywords": [
+    "discord",
+    "widgets",
+    "mcp",
+    "render",
+    "tools"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xZ0uk/discord-widgets.git",
+    "directory": "apps/mcp-server"
+  }
 }
